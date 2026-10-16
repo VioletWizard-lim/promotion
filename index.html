@@ -55,7 +55,7 @@ h1 { font-family: var(--font-display); font-weight: 800; font-size: clamp(26px, 
 .layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 24px; align-items: start; }
 @media (max-width: 900px) { .layout { grid-template-columns: minmax(0, 1fr); } .summary { order: -1; position: static !important; } }
 main { display: grid; gap: 20px; min-width: 0; }
-section.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 18px; display: grid; gap: 14px; min-width: 0; }
+section.card, nav.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 18px; display: grid; gap: 14px; min-width: 0; }
 h2 { font-size: 17px; margin: 0; display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
 h2 small { font-weight: 400; color: var(--muted); font-size: 13px; }
 h3 { font-size: 14px; margin: 0; color: var(--muted); font-weight: 500; letter-spacing: .02em; }
@@ -150,6 +150,28 @@ tr.grp td { background: var(--accent-soft); font-weight: 500; }
 .rules-form fieldset { border: 1px solid var(--line); border-radius: 4px; padding: 10px 12px; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; min-width: 0; }
 .rules-form legend { font-size: 13px; font-weight: 500; padding: 0 4px; }
 details summary small { font-weight: 400; }
+/* 인사기록카드 순서 */
+.step { scroll-margin-top: calc(env(safe-area-inset-top, 0px) + 12px); }
+.step h2 .no { display: inline-grid; place-items: center; min-width: 28px; height: 28px; padding: 0 6px; border-radius: 4px; background: var(--accent); color: var(--surface); font-family: var(--font-num); font-size: 14px; font-weight: 500; }
+.step h2 .sec-pts { margin-left: auto; font-family: var(--font-num); font-size: 14px; font-weight: 500; color: var(--accent); white-space: nowrap; }
+.step.skip { padding-block: 10px; gap: 6px; background: transparent; border-style: dashed; }
+.step.skip h2 { font-size: 15px; font-weight: 500; color: var(--muted); }
+.step.skip h2 .no { background: var(--line); color: var(--muted); }
+.step[data-kind="check"] h2 .no { background: var(--warn-soft); color: var(--warn); border: 1px solid var(--warn); }
+.chip { font-size: 11px; font-weight: 500; letter-spacing: .02em; padding: 2px 7px; border-radius: 10px; border: 1px solid var(--line); color: var(--muted); }
+.chip.chk { border-color: var(--warn); color: var(--warn); }
+.chips { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+.chips a { display: flex; gap: 8px; align-items: center; text-decoration: none; color: var(--muted); font-size: 13px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 4px; min-width: 0; }
+.chips a b { font-family: var(--font-num); font-weight: 500; min-width: 1.6em; }
+.chips a span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+.chips a i { font-style: normal; font-family: var(--font-num); font-size: 12px; color: var(--accent); }
+.chips a.on { color: var(--ink); border-color: var(--accent); background: var(--accent-soft); }
+.chips a.chk { color: var(--ink); border-color: var(--warn); }
+.chips a:hover, .chips a:focus-visible { border-color: var(--accent); }
+.lg { display: inline-block; width: 10px; height: 10px; border-radius: 2px; border: 1px solid var(--line); margin: 0 4px 0 10px; vertical-align: -1px; }
+.lg:first-child { margin-left: 0; }
+.lg.on { background: var(--accent-soft); border-color: var(--accent); }
+.lg.chk { border-color: var(--warn); }
 .file-btn { display: inline-flex; align-items: center; cursor: pointer; font-size: 15px; color: var(--ink); border: 1px solid var(--line); border-radius: 4px; padding: 7px 12px; background: var(--surface); }
 .file-btn input { position: absolute; width: 1px; height: 1px; opacity: 0; }
 .file-btn:focus-within { outline: 2px solid var(--accent); outline-offset: 1px; }
@@ -212,33 +234,61 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
         </div>
       </section>
 
-      <section class="card" id="sec-career">
-        <h2>① 경력평정 <small>만점 70 · 인사기록카드 ‘경력사항’</small></h2>
-        <p class="note">교육경력 기간을 경력 등급별로 입력하세요. 평정 기준일부터 거슬러 15년은 기본경력, 그 앞 5년은 초과경력으로 자동 배분합니다. 휴직 등 경력에서 빠지는 기간은 행을 나눠 제외하세요.</p>
-        <div class="mini-rows" id="careers"></div>
-        <div class="row-actions"><button type="button" id="addCareer">경력 추가</button></div>
-        <div class="kv" id="careerOut"></div>
-        <p class="hint">가경력: 교사·교감·장학사·교육연구사 등 교육공무원 경력 대부분 · 나·다경력: 강사, 일부 기관 근무 등. 등급 구분은 「교육공무원 승진규정」 별표 1을 확인하세요.</p>
+      <nav class="card stepnav" aria-label="인사기록카드 순서">
+        <h2>인사기록카드 순서대로 입력 <small>번호를 누르면 해당 칸으로 이동</small></h2>
+        <ol class="chips" id="stepChips"></ol>
+        <p class="hint"><span class="lg on"></span>점수 반영 <span class="lg chk"></span>확인만 <span class="lg"></span>점수 무관</p>
+      </nav>
+
+      <section class="card step skip" id="s1" data-kind="none">
+        <h2><span class="no">1</span>신상사항 <span class="chip">점수 무관</span></h2>
+        <p class="note">성명·생년월일·직위 등. 승진 점수에는 쓰이지 않습니다.</p>
       </section>
 
-      <section class="card" id="sec-perf">
-        <h2>② 근무성적평정 <small>만점 100 · 연도별 근무성적(다면평가 합산점)</small></h2>
-        <p class="note">해마다 학교에서 통보받은 근무성적평정 합산점(100점 만점)을 입력하세요. 최근 5년 중 유리한 3년을 자동으로 골라 반영비율로 계산합니다.</p>
-        <div class="mini-rows" id="perfs"></div>
-        <div class="row-actions"><button type="button" id="addPerf">연도 추가</button></div>
-        <div class="kv" id="perfOut"></div>
+      <section class="card step" id="s2" data-kind="score">
+        <h2><span class="no">2</span>병역사항 <small>→ 경력평정</small><span class="sec-pts" data-pts="s2"></span></h2>
+        <p class="note">군 복무 기간이 경력으로 인정되면 복무 기간을 입력하세요. 경력평정(16번 경력과 합산)에 들어갑니다. 경력 등급은 「교육공무원 승진규정」 별표 1과 호봉획정 내용을 확인하세요.</p>
+        <div class="mini-rows" id="careersMil"></div>
+        <div class="row-actions"><button type="button" id="addCareerMil">복무 기간 추가</button></div>
       </section>
 
-      <section class="card" id="sec-train">
-        <h2>③ 연수성적평정 <small>만점 30 · 인사기록카드 ‘연수’, ‘상훈’, ‘학력’</small></h2>
+      <section class="card step skip" id="s3" data-kind="none">
+        <h2><span class="no">3</span>가족사항 <span class="chip">점수 무관</span></h2>
+      </section>
+
+      <section class="card step skip" id="s4" data-kind="none">
+        <h2><span class="no">4</span>학력사항 <span class="chip">점수 무관</span></h2>
+        <p class="note">대학원 학위는 18번 ‘대학원에서의 학위취득’에서 입력합니다.</p>
+      </section>
+
+      <section class="card step" id="s5" data-kind="score">
+        <h2><span class="no">5</span>자격면허 <small>→ 선택가산점 (국가기술 자격증)</small><span class="sec-pts" data-pts="s5"></span></h2>
+        <div class="grid-inputs">
+          <label for="cert">보유 자격증 최상위 등급
+            <select id="cert" data-k="cert">
+              <option value="">해당 없음</option>
+              <option value="A">A등급 (기사·워드1급·컴활1급 등) 0.5</option>
+              <option value="B">B등급 (기능사·워드2~3급 등) 0.25</option>
+            </select>
+          </label>
+        </div>
+        <p class="note">교원자격증은 점수와 무관합니다. 국가기술 자격증은 상위 등급 1개만 인정하며, 2029. 3. 31.자 명부까지만 인정하고 이후 삭제됩니다.</p>
+      </section>
+
+      <section class="card step skip" id="s6" data-kind="none">
+        <h2><span class="no">6</span>외국어 능력 <span class="chip">점수 무관</span></h2>
+      </section>
+
+      <section class="card step" id="s7" data-kind="score">
+        <h2><span class="no">7</span>연수이수 <small>→ 연수성적(교육성적) · 공통가산점</small><span class="sec-pts" data-pts="s7"></span></h2>
         <div class="sub" style="border-top:0;padding-top:0">
-          <h3>직무연수 (평정기준일 전 10년 이내, 60시간 이상)</h3>
+          <h3>직무연수 성적 (평정기준일 전 10년 이내, 60시간 이상)</h3>
           <div class="mini-rows" id="jobs"></div>
           <div class="row-actions"><button type="button" id="addJob">직무연수 추가</button></div>
-          <p class="note">성적이 가장 좋은 1개는 성적으로, 나머지 중 2개까지는 이수실적으로 반영합니다. 성적이 없고 ‘이수’로만 기록된 연수는 성적 칸을 비워 두세요.</p>
+          <p class="note">성적이 가장 좋은 1개는 성적으로, 나머지 중 2개까지는 이수실적으로 반영합니다. 성적 없이 ‘이수’로만 기록된 연수는 성적 칸을 비워 두세요.</p>
         </div>
         <div class="sub">
-          <h3>자격연수 (1급 정교사 자격연수 등)</h3>
+          <h3>자격연수 성적 (1급 정교사 자격연수 등)</h3>
           <div class="grid-inputs">
             <label for="qualScore">자격연수 성적
               <input type="number" id="qualScore" min="0" step="0.01" data-k="qualScore" placeholder="예: 96.5">
@@ -249,62 +299,39 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
           </div>
         </div>
         <div class="sub">
-          <h3>연구실적 — 연구대회 입상</h3>
+          <h3>직무연수 학점 → 공통가산점 (학점당 0.02, 학년도별 0.08, 총 1.0)</h3>
+          <div class="mini-rows" id="credits"></div>
+          <div class="row-actions"><button type="button" id="addCredit">학년도 추가</button></div>
+          <p class="note">학점으로 기록된 직무연수의 학년도별 합계를 입력하세요.</p>
+        </div>
+      </section>
+
+      <section class="card step skip" id="s8" data-kind="none">
+        <h2><span class="no">8</span>국외시찰 및 수학 <span class="chip">점수 무관</span></h2>
+      </section>
+
+      <section class="card step skip" id="s9" data-kind="check">
+        <h2><span class="no">9</span>포상 <span class="chip chk">확인만</span></h2>
+        <p class="note">표창은 점수와 무관합니다. 연구대회·수업연구 발표대회 입상이 여기에 적혀 있으면 11번 ‘연구실적’에 입력하세요.</p>
+      </section>
+
+      <section class="card step skip" id="s10" data-kind="check">
+        <h2><span class="no">10</span>징계 <span class="chip chk">확인만</span></h2>
+        <p class="note">징계는 점수가 아니라 승진 제한·경력 제외에 영향을 줍니다. 경력에서 빠지는 기간이 있으면 16번 경력에서 그 기간을 빼고 입력하세요.</p>
+      </section>
+
+      <section class="card step" id="s11" data-kind="score">
+        <h2><span class="no">11</span>연구실적 <small>→ 연수성적(연구실적) · 선택가산점</small><span class="sec-pts" data-pts="s11"></span></h2>
+        <div class="sub" style="border-top:0;padding-top:0">
+          <h3>연구대회 입상 → 연구실적</h3>
           <div class="mini-rows" id="contests"></div>
           <div class="row-actions"><button type="button" id="addContest">입상 실적 추가</button></div>
           <p class="note">같은 해 입상이 여러 개면 가장 높은 1개만 반영합니다.</p>
         </div>
         <div class="sub">
-          <h3>연구실적 — 학위</h3>
-          <div class="mini-rows" id="degrees"></div>
-          <div class="row-actions"><button type="button" id="addDegree">학위 추가</button></div>
-        </div>
-        <div class="kv" id="trainOut"></div>
-      </section>
-
-      <section class="card">
-        <h2>④ 가산점 — 경력 기간 <small>인사기록카드 ‘경력사항’, 보직·담임 기록</small></h2>
-        <div class="school-find">
-          <label for="schoolSearch">학교명으로 항목 찾기
-            <input id="schoolSearch" list="schoolList" placeholder="예: 강화고, 인천하늘중">
-          </label>
-          <button type="button" id="addFromSchool">이 학교로 경력 추가</button>
-          <datalist id="schoolList"></datalist>
-        </div>
-        <p class="hint" id="schoolHint">도서·벽지, 특수지역 지정 학교·기관 목록에서 찾아 항목과 구역을 자동으로 채웁니다.</p>
-        <div class="periods" id="periods"></div>
-        <div class="row-actions">
-          <button type="button" id="addPeriod" class="primary">경력 추가</button>
-        </div>
-        <p class="note">1개월 미만은 일 단위로 계산합니다. 같은 항목·구역의 여러 기간은 합산하며 30일을 1개월로 넘깁니다.</p>
-      </section>
-
-      <section class="card">
-        <h2>⑤ 공통가산점 실적 <small>연수이수실적, 학교폭력 예방 실적</small></h2>
-        <div class="sub" style="border-top:0;padding-top:0">
-          <h3>직무연수 학점 (학점당 0.02, 학년도별 0.08 상한, 총 1.0)</h3>
-          <div class="mini-rows" id="credits"></div>
-          <div class="row-actions"><button type="button" id="addCredit">학년도 추가</button></div>
-        </div>
-        <div class="grid-inputs">
-          <label for="violence">학교폭력 예방·대응 실적 (연수)
-            <input type="number" id="violence" min="0" step="1" data-k="violence">
-          </label>
-        </div>
-      </section>
-
-      <section class="card">
-        <h2>⑥ 선택가산점 실적 <small>건수·등급으로 매기는 항목</small></h2>
-        <div class="sub" style="border-top:0;padding-top:0">
-          <h3>교육감인정 연구경력</h3>
+          <h3>인천 수업연구 발표대회 입상 → 선택가산점 (교실수업개선, 2020. 2. 29.까지)</h3>
           <div class="grid-inputs">
-            <label for="prac26">교육실습 2주 이상 6주 미만 (회)
-              <input type="number" id="prac26" min="0" step="1" data-k="prac26">
-            </label>
-            <label for="prac68">교육실습 6주 이상 8주 이하 (회)
-              <input type="number" id="prac68" min="0" step="1" data-k="prac68">
-            </label>
-            <label for="award1">수업연구 발표대회 1등급 (회)
+            <label for="award1">1등급 (회)
               <input type="number" id="award1" min="0" step="1" data-k="award1">
             </label>
             <label for="award2">2등급 (회)
@@ -314,33 +341,99 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
               <input type="number" id="award3" min="0" step="1" data-k="award3">
             </label>
           </div>
-          <h3>실습학기제 교육실습 (월 0.01, 학기당 0.03 상한)</h3>
-          <div class="mini-rows" id="semesters"></div>
-          <div class="row-actions"><button type="button" id="addSemester">학기 추가</button></div>
-          <p class="note">교실수업개선 입상실적은 2020. 2. 29. 이전 취득분까지만 인정합니다. 연구실적으로 평정된 입상은 중복 평정하지 않습니다.</p>
+          <p class="note">연구실적으로 평정한 입상은 가산점에 중복해서 넣지 않습니다.</p>
         </div>
-        <div class="sub">
-          <h3>국가기술 자격증 소지</h3>
-          <div class="grid-inputs">
-            <label for="cert">보유 자격증 최상위 등급
-              <select id="cert" data-k="cert">
-                <option value="">해당 없음</option>
-                <option value="A">A등급 (기사·워드1급·컴활1급 등) 0.5</option>
-                <option value="B">B등급 (기능사·워드2~3급 등) 0.25</option>
-              </select>
+      </section>
+
+      <section class="card step" id="s12" data-kind="score">
+        <h2><span class="no">12</span>가산점 <small>→ 공통·선택가산점</small><span class="sec-pts" data-pts="s12"></span></h2>
+        <div class="sub" style="border-top:0;padding-top:0">
+          <h3>기간으로 매기는 가산점 (도서·벽지, 특수지역, 보직, 담임, 연구학교 등)</h3>
+          <div class="school-find">
+            <label for="schoolSearch">학교명으로 항목 찾기
+              <input id="schoolSearch" list="schoolList" placeholder="예: 강화고, 인천하늘중">
             </label>
+            <button type="button" id="addFromSchool">이 학교로 추가</button>
+            <datalist id="schoolList"></datalist>
           </div>
-          <p class="note">상위 등급 1개만 인정합니다. 2029. 3. 31.자 명부까지만 인정하고 이후 삭제됩니다.</p>
+          <p class="hint" id="schoolHint">도서·벽지, 특수지역 지정 학교·기관 목록에서 찾아 항목과 구역을 자동으로 채웁니다.</p>
+          <div class="periods" id="periods"></div>
+          <div class="row-actions"><button type="button" id="addPeriod">가산점 기간 추가</button></div>
+          <p class="note">1개월 미만은 일 단위로 계산합니다. 같은 항목·구역의 여러 기간은 합산하며 30일을 1개월로 넘깁니다. 근무 학교·보직 기간은 16번 경력에서도 확인할 수 있습니다.</p>
         </div>
         <div class="sub">
-          <h3>인천교육 공헌실적</h3>
+          <h3>건수로 매기는 가산점</h3>
           <div class="grid-inputs">
+            <label for="violence">학교폭력 예방·대응 실적 (연수) · 공통
+              <input type="number" id="violence" min="0" step="1" data-k="violence">
+            </label>
+            <label for="prac26">교육실습 2주 이상 6주 미만 (회)
+              <input type="number" id="prac26" min="0" step="1" data-k="prac26">
+            </label>
+            <label for="prac68">교육실습 6주 이상 8주 이하 (회)
+              <input type="number" id="prac68" min="0" step="1" data-k="prac68">
+            </label>
             <label for="youth">청소년봉사단 지도교사 (연수)
               <input type="number" id="youth" min="0" step="1" data-k="youth">
             </label>
           </div>
-          <p class="note">중심학교·자율학교 담당, 담임교사 경력은 위 ‘경력 기간’에 기간으로 입력하세요.</p>
+          <h3>실습학기제 교육실습 (월 0.01, 학기당 0.03 상한)</h3>
+          <div class="mini-rows" id="semesters"></div>
+          <div class="row-actions"><button type="button" id="addSemester">학기 추가</button></div>
         </div>
+      </section>
+
+      <section class="card step skip" id="s13" data-kind="none">
+        <h2><span class="no">13</span>비고 <span class="chip">점수 무관</span></h2>
+      </section>
+
+      <section class="card step skip" id="s14" data-kind="none">
+        <h2><span class="no">14</span>승급기록 <span class="chip">점수 무관</span></h2>
+      </section>
+
+      <section class="card step skip" id="s15" data-kind="check">
+        <h2><span class="no">15</span>호봉획정근거 <span class="chip chk">확인만</span></h2>
+        <p class="note">점수에 직접 쓰이지 않지만, 병역·임용 전 경력이 몇 할로 인정됐는지 확인할 때 참고하세요.</p>
+      </section>
+
+      <section class="card step" id="s16" data-kind="score">
+        <h2><span class="no">16</span>경력 <small>→ 경력평정 (만점 70)</small><span class="sec-pts" data-pts="s16"></span></h2>
+        <p class="note">교육경력 기간을 경력 등급별로 입력하세요. 평정 기준일부터 거슬러 15년은 기본경력, 그 앞 5년은 초과경력으로 자동으로 나눕니다. 휴직 등 경력에서 빠지는 기간은 행을 나눠 제외하세요.</p>
+        <div class="mini-rows" id="careers"></div>
+        <div class="row-actions"><button type="button" id="addCareer">경력 추가</button></div>
+        <div class="kv" id="careerOut"></div>
+        <p class="hint">가경력: 교사·교감·장학사·교육연구사 등 교육공무원 경력 대부분 · 나·다경력: 강사, 일부 기관 근무 등. 등급 구분은 「교육공무원 승진규정」 별표 1을 확인하세요. 병역(2번)·임용 전 경력(20번)도 합산됩니다.</p>
+      </section>
+
+      <section class="card step skip" id="s17" data-kind="none">
+        <h2><span class="no">17</span>보충기재 <span class="chip">점수 무관</span></h2>
+      </section>
+
+      <section class="card step" id="s18" data-kind="score">
+        <h2><span class="no">18</span>대학원에서의 학위취득 <small>→ 연수성적(연구실적)</small><span class="sec-pts" data-pts="s18"></span></h2>
+        <div class="mini-rows" id="degrees"></div>
+        <div class="row-actions"><button type="button" id="addDegree">학위 추가</button></div>
+        <div class="kv" id="trainOut"></div>
+      </section>
+
+      <section class="card step skip" id="s19" data-kind="check">
+        <h2><span class="no">19</span>자격취득 <span class="chip chk">확인만</span></h2>
+        <p class="note">자격 취득일은 보직교사 근무경력(1급 2019. 3. 1., 2급 2023. 3. 1. 이후) 등 가산점 평정기간을 판단할 때 참고하세요. 자격연수 성적은 7번에서 입력합니다.</p>
+      </section>
+
+      <section class="card step" id="s20" data-kind="score">
+        <h2><span class="no">20</span>임용전 경력 <small>→ 경력평정</small><span class="sec-pts" data-pts="s20"></span></h2>
+        <p class="note">기간제 교사 등 경력으로 인정되는 임용 전 경력을 입력하세요. 16번 경력과 합산해 경력평정을 계산합니다.</p>
+        <div class="mini-rows" id="careersPre"></div>
+        <div class="row-actions"><button type="button" id="addCareerPre">임용 전 경력 추가</button></div>
+      </section>
+
+      <section class="card step" id="sPerf" data-kind="score">
+        <h2><span class="no">+</span>근무성적평정 <small>인사기록카드 밖 · 학교에서 통보받은 점수 (만점 100)</small><span class="sec-pts" data-pts="sPerf"></span></h2>
+        <p class="note">해마다 통보받은 근무성적평정 합산점(100점 만점)을 입력하세요. 최근 5년 중 유리한 3년을 자동으로 골라 반영비율로 계산합니다.</p>
+        <div class="mini-rows" id="perfs"></div>
+        <div class="row-actions"><button type="button" id="addPerf">연도 추가</button></div>
+        <div class="kv" id="perfOut"></div>
       </section>
 
       <section class="card">
@@ -520,6 +613,9 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
     { legend: "연수성적 — 교육성적", keys: [["tScorePts", "직무연수 성적 배점"], ["tCountPts", "이수실적 1회 배점"], ["tCountMax", "이수실적 최대 횟수"], ["tJobMax", "직무연수 만점"], ["tStep", "5점 구간 환산 (1=사용, 0=원점수)"], ["qMax", "자격연수 만점"], ["qK", "자격연수 감점 계수"], ["eduMax", "교육성적 만점"]] },
     { legend: "연수성적 — 연구실적", keys: [["rN1", "전국 1등급"], ["rN2", "전국 2등급"], ["rN3", "전국 3등급"], ["rS1", "시·도 1등급"], ["rS2", "시·도 2등급"], ["rS3", "시·도 3등급"], ["dPhdJ", "박사 (직무관련)"], ["dPhdO", "박사 (기타)"], ["dMaJ", "석사 (직무관련)"], ["dMaO", "석사 (기타)"], ["rMax", "연구실적 만점"]] }
   ];
+  /* 경력평정 입력은 인사기록카드의 16번 경력, 2번 병역, 20번 임용전 경력에서 나눠 받는다 */
+  var CAREER_SRC = ["경력", "병역", "임용전"];
+  function careersOf(src) { return state.careers.filter(function (c) { return (c.src || "경력") === src; }); }
   function R(k) { var v = state.rules && state.rules[k]; v = parseFloat(v); return isFinite(v) ? v : RULE_DEFAULTS[k]; }
 
   function blank() {
@@ -530,7 +626,9 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
   function sample() {
     var s = blank();
     s.sample = true;
-    s.careers = [{ id: nid(), grade: "가", from: "2011-03-01", to: "", note: "중등 교사 (예시)" }];
+    s.careers = [
+      { id: nid(), src: "병역", grade: "가", from: "2008-04-01", to: "2010-01-31", note: "육군 병장 (예시)" },
+      { id: nid(), src: "경력", grade: "가", from: "2011-03-01", to: "", note: "중등 교사 (예시)" }];
     s.perfs = [["2022", "96.2"], ["2023", "97.5"], ["2024", "95.8"], ["2025", "98.1"], ["2026", "97.4"]].map(function (x) { return { id: nid(), year: x[0], score: x[1] }; });
     s.jobs = [["수업 디자인 직무연수 (예시)", "2023", "98.5"], ["학생 생활교육 직무연수 (예시)", "2024", "94"], ["AI 활용 교육 직무연수 (예시)", "2025", ""]].map(function (x) { return { id: nid(), name: x[0], year: x[1], score: x[2] }; });
     s.qualScore = "95.2";
@@ -905,10 +1003,15 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
     renderPeriods();
     renderMini("credits", state.credits, [{ k: "year", label: "학년도", type: "number", ph: "2025" }, { k: "credits", label: "이수 학점", type: "number", step: "0.5", ph: "4" }]);
     renderMini("semesters", state.semesters, [{ k: "label", label: "학기", type: "text", ph: "2026-1학기" }, { k: "months", label: "운영 개월 수", type: "number", step: "0.5", ph: "3" }]);
-    renderMini("careers", state.careers, [
-      { k: "grade", label: "경력 등급", type: "select", options: [["가", "가경력"], ["나", "나경력"], ["다", "다경력"]] },
-      { k: "from", label: "시작일", type: "date" }, { k: "to", label: "종료일 (비우면 기준일)", type: "date" },
-      { k: "note", label: "메모", type: "text", ph: "학교·직위" }], "c4");
+    var careerFields = function (ph, toLabel) {
+      return [
+        { k: "grade", label: "경력 등급", type: "select", options: [["가", "가경력"], ["나", "나경력"], ["다", "다경력"]] },
+        { k: "from", label: "시작일", type: "date" }, { k: "to", label: toLabel, type: "date" },
+        { k: "note", label: "메모", type: "text", ph: ph }];
+    };
+    renderMini("careers", careersOf("경력"), careerFields("학교·직위", "종료일 (비우면 기준일)"), "c4");
+    renderMini("careersMil", careersOf("병역"), careerFields("군별·계급", "전역일"), "c4");
+    renderMini("careersPre", careersOf("임용전"), careerFields("기관·직위 (기간제 등)", "종료일"), "c4");
     renderMini("perfs", state.perfs, [
       { k: "year", label: "평정 연도", type: "number", ph: "2026" },
       { k: "score", label: "합산점 (100점 만점)", type: "number", step: "0.001", ph: "97.5" }, { tag: true }], "c3");
@@ -987,6 +1090,28 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
       kv("자격연수", f4(tr.qual) + " / " + R("qMax"), tr.qualDesc) +
       kv("연구실적", f4(tr.research) + " / " + R("rMax"), "대회 " + f4(tr.contest) + " + 학위 " + f4(tr.degree) + (tr.researchRaw > tr.research ? " (상한 적용)" : "")) +
       kv("연수성적평정점", tr.total.toFixed(3), "만점 " + tr.max, true);
+
+    // 인사기록카드 번호별 반영 점수
+    function iv(k) { return res.items[k] ? res.items[k].val : 0; }
+    function srcSpan(src) {
+      var t = { m: 0, d: 0 };
+      careersOf(src).forEach(function (c) { var r = cr.rows[c.id]; if (r) { t.m += r.m; t.d += r.d; } });
+      t.m += Math.floor(t.d / 30); t.d %= 30;
+      return t.m || t.d ? fmtSpan(t) + " 반영" : "";
+    }
+    var secPts = {
+      s2: [srcSpan("병역"), srcSpan("병역") ? "반영" : ""],
+      s5: [iv("cert") ? "가산점 " + f4(iv("cert")) : "", iv("cert") ? f4(iv("cert")) : ""],
+      s7: ["교육성적 " + f4(tr.edu) + (iv("credits") ? " · 가산점 " + f4(iv("credits")) : ""), f4(tr.edu + iv("credits"))],
+      s11: [(tr.contest ? "연구대회 " + f4(tr.contest) : "") + (iv("award") ? (tr.contest ? " · " : "") + "가산점 " + f4(iv("award")) : ""), tr.contest || iv("award") ? f4(tr.contest + iv("award")) : ""],
+      s12: ["가산점 합계 (5·7·11번 포함) " + f4(res.total), "계 " + f4(res.total)],
+      s16: ["경력평정 " + cr.total.toFixed(3), cr.total.toFixed(3)],
+      s18: [tr.degree ? "학위 " + f4(tr.degree) : "", tr.degree ? f4(tr.degree) : ""],
+      s20: [srcSpan("임용전"), srcSpan("임용전") ? "반영" : ""],
+      sPerf: ["근무성적평정 " + pf.total.toFixed(3), pf.total.toFixed(3)]
+    };
+    document.querySelectorAll("[data-pts]").forEach(function (el) { var v = secPts[el.dataset.pts]; el.textContent = v ? v[0] : ""; });
+    document.querySelectorAll("#stepChips [data-chip]").forEach(function (el) { var v = secPts[el.dataset.chip]; el.textContent = v ? v[1] : ""; });
 
     var grand = cr.total + pf.total + tr.total + res.total;
     document.getElementById("sumTotal").textContent = grand.toFixed(3);
@@ -1078,10 +1203,15 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
     return { id: nid(), year: ys.length ? String(Math.max.apply(null, ys) + 1) : "", credits: "" };
   }));
   document.getElementById("addSemester").addEventListener("click", miniHandlers("semesters", "semesters", function () { return { id: nid(), label: "", months: "" }; }));
-  document.getElementById("addCareer").addEventListener("click", miniHandlers("careers", "careers", function () {
-    var ends = state.careers.map(function (c) { return parse(c.to); }).filter(function (x) { return x != null; });
-    return { id: nid(), grade: "가", from: ends.length ? new Date(Math.max.apply(null, ends) + DAY).toISOString().slice(0, 10) : "", to: "", note: "" };
-  }));
+  function addCareerOf(src) {
+    return function () {
+      var ends = careersOf(src).map(function (c) { return parse(c.to); }).filter(function (x) { return x != null; });
+      return { id: nid(), src: src, grade: "가", from: ends.length ? new Date(Math.max.apply(null, ends) + DAY).toISOString().slice(0, 10) : "", to: "", note: "" };
+    };
+  }
+  document.getElementById("addCareer").addEventListener("click", miniHandlers("careers", "careers", addCareerOf("경력")));
+  document.getElementById("addCareerMil").addEventListener("click", miniHandlers("careersMil", "careers", addCareerOf("병역")));
+  document.getElementById("addCareerPre").addEventListener("click", miniHandlers("careersPre", "careers", addCareerOf("임용전")));
   function nextYear(list) {
     var ys = list.map(function (c) { return parseInt(c.year, 10); }).filter(isFinite);
     return ys.length ? String(Math.max.apply(null, ys) + 1) : "";
@@ -1134,7 +1264,7 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
     add("결과", [tr.total.toFixed(3)], "연수성적평정점");
     add("결과", [f4(res.total), f4(res.common), f4(res.select)], "가산점 합계 / 공통 / 선택");
     add("평정기준일", [state.baseDate], "학년도 종료일");
-    state.careers.forEach(function (c) { add("경력평정", [c.grade, c.from, c.to, c.note], "등급 / 시작일 / 종료일 / 메모"); });
+    state.careers.forEach(function (c) { add("경력평정", [c.grade, c.from, c.to, c.note, c.src || "경력"], "등급 / 시작일 / 종료일 / 메모 / 출처(경력·병역·임용전)"); });
     state.perfs.forEach(function (p) { add("근무성적", [p.year, p.score], "평정 연도 / 합산점"); });
     state.jobs.forEach(function (j) { add("직무연수", [j.name, j.year, j.score], "연수명 / 이수 연도 / 성적"); });
     state.contests.forEach(function (c) { add("연구대회", [c.year, c.level, c.rank], "입상 연도 / 규모(전국·시도) / 등급"); });
@@ -1176,7 +1306,7 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
       switch (kind) {
         case "결과": break;
         case "평정기준일": s.baseDate = v[0]; break;
-        case "경력평정": s.careers.push({ id: nid(), grade: GRADE_KEY[v[0]] ? v[0] : "가", from: v[1], to: v[2], note: v[3] }); break;
+        case "경력평정": s.careers.push({ id: nid(), src: CAREER_SRC.indexOf(v[4]) >= 0 ? v[4] : "경력", grade: GRADE_KEY[v[0]] ? v[0] : "가", from: v[1], to: v[2], note: v[3] }); break;
         case "근무성적": s.perfs.push({ id: nid(), year: v[0], score: v[1] }); break;
         case "직무연수": s.jobs.push({ id: nid(), name: v[0], year: v[1], score: v[2] }); break;
         case "연구대회": s.contests.push({ id: nid(), year: v[0], level: v[1] === "전국" ? "전국" : "시도", rank: /^[123]$/.test(v[2]) ? v[2] : "3" }); break;
@@ -1271,6 +1401,14 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
     resetArmed = false; e.target.textContent = "전체 초기화";
     state = blank(); renderStatic(); renderResults(); say("모든 입력을 지웠습니다.");
   });
+
+  // 1~20번 바로가기
+  document.getElementById("stepChips").innerHTML = Array.prototype.map.call(document.querySelectorAll("section.step"), function (sec) {
+    var kind = sec.dataset.kind, h = sec.querySelector("h2");
+    var no = h.querySelector(".no").textContent;
+    var name = h.childNodes[1] ? h.childNodes[1].textContent.trim() : "";
+    return '<li><a href="#' + sec.id + '" class="' + (kind === "score" ? "on" : kind === "check" ? "chk" : "") + '"><b>' + esc(no) + "</b><span>" + esc(name) + "</span><i data-chip=\"" + sec.id + "\"></i></a></li>";
+  }).join("");
 
   renderStatic();
   renderResults();
