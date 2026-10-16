@@ -304,7 +304,7 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
 
       <section class="card step" id="s5" data-kind="score">
         <h2><span class="no">5</span>자격면허 <small>→ 선택가산점 (국가기술 자격증)</small><span class="sec-pts" data-pts="s5"></span></h2>
-        <div class="grid-inputs" data-only="incheon:mid incheon:ele busan:mid busan:ele chungbuk:mid chungbuk:ele gyeongnam:mid jeonnam:mid jeonnam:ele gangwon:mid gangwon:ele chungnam:mid chungnam:ele ulsan:mid daejeon:mid daejeon:ele">
+        <div class="grid-inputs" data-only="incheon:mid incheon:ele busan:mid busan:ele chungbuk:mid chungbuk:ele gyeongnam:mid gyeongnam:ele jeonnam:mid jeonnam:ele gangwon:mid gangwon:ele chungnam:mid chungnam:ele ulsan:mid daejeon:mid daejeon:ele">
           <label for="cert">보유 자격증 최상위 등급 · 최대 0.5
             <select id="cert" data-k="cert">
               <option value="">해당 없음</option>
@@ -1993,6 +1993,144 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
     counts: function (addCount, st) {
       var v = { A: 0.5, B: 0.4, C: 0.3 }[st.cert] || 0;
       addCount("cert", "gCert", "국가기술자격·해기사·정보 관련 자격증", v, 0.5, st.cert ? st.cert + "등급" : "");
+    }
+  };
+  /* 경남 초등: 「경상남도 초등·특수·보건 교육공무원 가산점 평정규정」(고시 제2024-33호, 2024.10.18. 개정, 2025.3.1. 시행) */
+  RULESETS["gyeongnam:ele"] = (function () {
+    var spedR = function (old) {
+      return { "특수학교": [0.018, 0.0006], "특수학급": [0.009, 0.0003], "특수학급(1994.9.22. 이전 담당·계속근무)": old ? [0.018, 0.0006] : [0.009, 0.0003] };
+    };
+    var r15 = [0.015, 0.0005], r12 = [0.012, 0.0004];
+    return {
+      ready: true, source: "경상남도교육청 「경상남도 초등·특수·보건 교육공무원 가산점 평정규정」(고시 제2024-33호, 2024.10.18. 개정, 2025.3.1. 시행)",
+      notice: "도서·벽지(상한 2.0)와 준벽지(상한 0.6, 2014.1.1.~)는 합산하지 않고 택일하므로 둘 중 유리한 하나만 입력하세요(그룹 상한 2.0으로만 묶었습니다). 2006.3.1. 이후 타 시·도 전입자는 도서·벽지 경력에 1998년 이후 점수를 적용하므로 해당 기간을 직접 확인하세요. 농어촌진흥학교 급지는 근무 당시 기준으로 고르세요(2009~2013년은 가=읍·면, 나=동·인구 7만 이상 읍·면, 2014년부터는 가=군의 면, 나=읍·시의 면, 다=동·인구 7만 이상 읍·면). 1995.3.1.~1998.2.28. 농어촌 경력은 가산점인정자명부 등재자만 인정됩니다. 2017.1.1.부터 특수학교(급) 가산점은 특수교사에게만 부여합니다. 장학사·교육연구사 경력 중 임기제 교육연구사(늘봄지원실장) 경력은 넣지 마세요. 특수교육센터는 전입 후 3년 이내 연속 근무 중 최초 1년을 뺀 기간만 입력하세요. 특수교원의 교육실습협력학교(월 0.0129, 대용학교 포함 상한 0.62)는 반영하지 않았으니 ‘직접 입력 가산점’으로 넣으세요. 영재교육원 강사와 발명영재 지도교사는 같은 학년도에 하나만, 학력향상우수학교는 표창받은 학년도만 입력하세요. 전국소년체전 금메달 지도(연 0.2, 상한 0.4)와 경로·효행상(2012.2.29.까지, 1회 0.1)은 ‘직접 입력 가산점’(기타 경력·실적 그룹)으로 넣으세요. 파견기관별 시행일(EBS 등)은 문서 부칙의 항·호 번호가 개정으로 바뀌어 반영하지 않았습니다.",
+      selectCap: 10,
+      certOptions: [["A", "정보처리기사·산업기사, 전자계산기조직응용기사·산업기사, 워드프로세서 1급(단일등급), 컴퓨터활용능력 1급 0.5"],
+        ["B", "정보처리기능사, 전자계산기조직응용기능사, 워드프로세서 2·3급, 컴퓨터활용능력 2·3급 0.3"]],
+      groups: {
+        gIsland: { name: "도서·벽지·준벽지 (택일, 상한 2.0)", cap: 2.0 },
+        gRural: { name: "농어촌진흥학교", cap: 1.25 },
+        gHead: { name: "보직교사·장학사·교육연구사", cap: 2.0 },
+        gSped: { name: "한센병환자자녀 학교(급)·특수학교(급) (합산 1.7)", cap: 1.7 },
+        gRes: { name: "교육감 지정 연구학교·교육실습·꿈나르미학교 (공통 연구학교와 합산 1.0)", cap: 1.0 },
+        gDispatch: { name: "국내 파견·특수교육센터 (재외 파견과 합산 0.75)", cap: 0.75 },
+        gEtc: { name: "체육·청소년단체·영재·발명·학력향상·30학급 교감 등 (합산 0.5)", cap: 0.5 },
+        gCert: { name: "국가기술자격증 [별표1]", cap: 0.5 }
+      },
+      items: {
+        islandGN: { g: "gIsland", name: "도서·벽지 근무경력", cap: 2.0, grades: ["가", "나", "다", "라"], periods: [
+          { to: "1997-02-28", label: "~1997.2.", r: { "가": [0.125, 0.00417], "나": [0.096, 0.0032], "다": [0.066, 0.0022], "라": [0.037, 0.00123] } },
+          { from: "1997-03-01", to: "1997-12-31", label: "1997.3.~12.", r: { "가": [0.084, 0.0028], "나": [0.068, 0.00227], "다": [0.050, 0.00167], "라": [0.034, 0.00113] } },
+          { from: "1998-01-01", label: "1998~", r: { "가": [0.042, 0.0014], "나": [0.034, 0.00113], "다": [0.025, 0.00083], "라": [0.017, 0.00057] } }] },
+        semiRemote: { g: "gIsland", name: "준벽지학교 근무경력 (2014.1.1.~, [별표3])", cap: 0.6, periods: [{ from: "2014-01-01", m: 0.010, d: 0.00033 }] },
+        ruralGN: { g: "gRural", name: "농어촌진흥학교 근무경력 (교감은 2022.3.~ ‘교감’)", cap: 1.25, grades: ["가", "나", "다", "교감"], periods: [
+          { from: "1995-03-01", to: "2008-12-31", label: "~2008", r: { "가": r15, "나": r15, "다": r15 } },
+          { from: "2009-01-01", to: "2013-12-31", label: "2009~2013", r: { "가": r15, "나": r12, "다": r12 } },
+          { from: "2014-01-01", to: "2022-02-28", label: "2014~", r: { "가": [0.018, 0.0006], "나": r15, "다": r12 } },
+          { from: "2022-03-01", label: "2022.3.~", r: { "가": [0.018, 0.0006], "나": r15, "다": r12, "교감": r12 } }] },
+        head: { g: "gHead", name: "보직교사 경력", cap: 1.25, periods: [{ m: 0.021, d: 0.0007 }] },
+        supervisor: { g: "gHead", name: "장학사·교육연구사 경력 (임기제 늘봄지원실장 제외)", cap: 0.75, periods: [{ m: 0.015, d: 0.0005 }] },
+        hansenGN: { g: "gSped", name: "한센병환자자녀 학교·학급 담당 (~2011.2.28.)", cap: 1.0, periods: [{ to: "2011-02-28", m: 0.018, d: 0.0006 }] },
+        spedGN: { g: "gSped", name: "특수학교 근무·특수학급 담당", cap: 1.0, grades: ["특수학교", "특수학급", "특수학급(1994.9.22. 이전 담당·계속근무)"], periods: [
+          { to: "1995-02-28", label: "~1995.2.", r: spedR(true) }, { from: "1995-03-01", label: "1995.3.~", r: spedR(false) }] },
+        research2: { g: "gRes", name: "교육감 지정 연구·시범·실험학교", cap: 1.0, periods: [{ m: 0.0129, d: 0.00043 }] },
+        practicumGN: { g: "gRes", name: "교육실습 협력학교·대용(부설)학교", cap: 1.0, grades: ["협력학교", "대용·부설학교"], periods: [
+          { to: "2007-02-28", label: "~2007.2.", r: { "협력학교": [0.018, 0.0006], "대용·부설학교": [0.018, 0.0006] } },
+          { from: "2007-03-01", label: "2007.3.~", r: { "협력학교": [0.0146, 0.00048], "대용·부설학교": [0.018, 0.0006] } }] },
+        dream: { g: "gRes", name: "꿈나르미학교", cap: 1.0, periods: [{ m: 0.0129, d: 0.00043 }] },
+        mountainGN: { g: "gDispatch", name: "경상남도산촌유학교육원 파견", cap: 0.5, periods: [{ m: 0.021, d: 0.0007 }] },
+        dispatchGN: { g: "gDispatch", name: "도교육감 소속 교육기관(연수·연구·수련·행정) 파견", cap: 0.25, periods: [{ m: 0.0105, d: 0.00035 }] },
+        woopo: { g: "gDispatch", name: "우포생태교육원 파견", cap: 0.3, periods: [{ m: 0.015, d: 0.0005 }] },
+        ebs: { g: "gDispatch", name: "한국교육방송공사(EBS) 파견", cap: 0.4, periods: [{ m: 0.017, d: 0.00057 }] },
+        spedCenter: { g: "gDispatch", name: "특수교육센터 근무 (2017.3.1.~, 최초 1년 제외)", cap: 0.4, periods: [{ from: "2017-03-01", m: 0.0084, d: 0.0003 }] },
+        giftedGN: { g: "gEtc", name: "영재교육원 강사·학급 담임", cap: 0.2, periods: [{ m: 0.0084, d: 0.0003 }] },
+        inventionGN: { g: "gEtc", name: "발명영재교육 지도교사", cap: 0.2, periods: [{ m: 0.0084, d: 0.0003 }] },
+        youthGN: { g: "gEtc", name: "청소년단체 지도교원 (2010.3.1.~2014.12.31.)", cap: 0.2, periods: [{ from: "2010-03-01", to: "2014-12-31", m: 0.0034, d: 0 }] },
+        achieveGN: { g: "gEtc", name: "학력향상 우수학교 유공교사 (연 0.05)", cap: 0.5, periods: [{ m: 0.00417, d: 0 }] },
+        vp30GN: { g: "gEtc", name: "30학급 이상 학교 근무 교감 (2021.3.1.~)", cap: 0.5, periods: [{ from: "2021-03-01", m: 0.01, d: 0.00033 }] }
+      },
+      schools: [
+        ["semiRemote", "", "일동초,반동초,용원초,이반성초,서포초,금동초,안명초,이작초,원동초,좌삼초,외암초,월촌초,이방초,장천초,하일초,동해초,미조초,상주초,남명초,백전초,신원초,가북초,봉산초,야로초,합천가야초"]
+      ],
+      /* 제6조 중복 경력 허용 범위, 제5조 제11항 */
+      pairs: ["research|research2", "research|practicumGN", "research|dream",
+        "head|hansenGN", "supervisor|islandGN", "islandGN|hansenGN", "islandGN|spedGN", "hansenGN|spedGN",
+        "ruralGN|hansenGN", "ruralGN|spedGN", "semiRemote|spedGN", "ruralGN|vp30GN"],
+      groupCap: function (g, base, res) {
+        if (g === "gRes") return Math.max(0, 1.0 - (res.items.research ? res.items.research.val : 0));
+        if (g === "gDispatch") return Math.max(0, 0.75 - (res.items.overseas ? res.items.overseas.val : 0));
+        return null;
+      },
+      counts: function (addCount, st) {
+        var v = { A: 0.5, B: 0.3 }[st.cert] || 0;
+        addCount("cert", "gCert", "국가기술자격증 (높은 것 1개)", v, 0.5, st.cert ? st.cert + "등급" : "");
+      }
+    };
+  })();
+  /* 경북 초등: 경상북도교육청 「2023학년도 교육공무원(초등) 평정 관련 자료」 Ⅴ. 가산점 평정 (유초등교육과-20739, 2022. 11. 1.) */
+  RULESETS["gyeongbuk:ele"] = {
+    ready: true, source: "경상북도교육청 「2023학년도 교육공무원(초등) 평정 관련 자료」 Ⅴ. 가산점 평정 (유초등교육과-20739, 2022. 11. 1.) 및 별책 「2022학년도 승진후보자·연수대상자 가산점 평정 대상학교(초등)」",
+    notice: "2023학년도 기준 자료로 만들었으므로 그 뒤 개정 사항은 반영되지 않았을 수 있습니다. 영재교육 담당 경력(2009.1.1.~, 연 0.02), 농어촌 교생실습 지도경력(주당 0.01), 수업선도교사(연 0.06, 최대 3년 0.18)·수업명인(연 0.09, 최대 3년 0.27, 합계 0.45), 다자녀 교원(셋째 이상 0.3, 막내가 2018.1.1. 이후 출생 0.5)은 ‘특수 경력 및 실적’ 그룹에 ‘직접 입력 가산점’으로 넣으세요. 국가기술자격증·외국어능력 가산점은 2023.3.31. 평정부터 폐지되어 넣지 않았습니다. 학교 자동 선택은 농어촌 진흥지역 ‘가’지역 대상교(72교, 2021.3.1.~)만 넣었고, 도서·벽지 급지와 그 밖의 농어촌 학교는 지정·해제 이력이 학교마다 달라 별책을 보고 직접 고르세요(군위군은 2023.7.1. 대구로 편입). 대규모 초등학교 교감 경력은 매년 4.1. 학급수에 맞춰 연도별로 행을 나눠 넣으세요. 교육부·교육감 지정 연구학교는 2002.1.1.~2009.2.28. 중복분은 각각 인정되지만 계산기는 중복 경고를 표시합니다.",
+    selectCap: 10,
+    commonCaps: { creditsYear: 0.12 },
+    groups: {
+      gArea: { name: "도서·벽지·농어촌 근무경력 (합산 3.5)", cap: 3.5 },
+      gRes: { name: "교육감(도교육청) 지정 연구학교 (공통 연구학교와 합산 1.0)", cap: 1.0 },
+      gHead: { name: "보직교사 경력", cap: 2.0 },
+      gSpecial: { name: "특수 경력 및 실적 (한센·특수, 장학사, 연구주무, 발명, 청소년단체, 장기근속, 대규모교 교감 등)", cap: 3.0 }
+    },
+    items: {
+      islandGB: { g: "gArea", name: "도서·벽지 교육(행정)기관 근무경력", cap: 3.0, grades: ["가", "나", "다", "라"], periods: [
+        { to: "1997-12-31", label: "~1997", r: { "가": [0.075, 0.0025], "나": [0.0576, 0.00192], "다": [0.0396, 0.00132], "라": [0.0222, 0.00074] } },
+        { from: "1998-01-01", to: "2002-02-28", label: "1998~2002.2", r: { "가": [0.0394, 0.00131], "나": [0.0318, 0.00106], "다": [0.0234, 0.00078], "라": [0.0159, 0.00053] } },
+        { from: "2002-03-01", to: "2003-02-28", label: "2002.3~2003.2", r: { "가": [0.0394, 0.00131], "나": [0.0318, 0.00106], "다": [0.0234, 0.00078], "라": [0.0187, 0.00062] } },
+        { from: "2003-03-01", label: "2003.3~", r: { "가": [0.0525, 0.00175], "나": [0.045, 0.00151], "다": [0.0281, 0.00093], "라": [0.0234, 0.00078] } }] },
+      ruralGB: { g: "gArea", name: "농어촌교육진흥지역 학교 근무경력 (1995.3.1.~, 2021.3.1.부터 가·나지역)", cap: 1.75, grades: ["가지역", "나지역"], periods: [
+        { from: "1995-03-01", to: "2021-02-28", label: "~2021.2.28.", r: { "가지역": [0.015, 0.0005], "나지역": [0.015, 0.0005] } },
+        { from: "2021-03-01", label: "2021.3.1.~", r: { "가지역": [0.0167, 0.00056], "나지역": [0.015, 0.0005] } }] },
+      research2: { g: "gRes", name: "교육감 지정 연구·시범·실험학교 (1973.1.1.~)", cap: 1.0, periods: [{ from: "1973-01-01", m: 0.010, d: 0.0003 }] },
+      head: { g: "gHead", name: "보직교사 경력 (1급 정교사)", cap: 2.0, periods: [
+        { to: "2020-02-29", sub: 1.25, label: "~2020.2.29. (1.25 상한)", m: 0.015, d: 0.0005 },
+        { from: "2020-03-01", label: "2020.3.1.~", m: 0.015, d: 0.0005 }] },
+      hansenGB: { g: "gSpecial", name: "한센인 자녀 학교·학급 담당 (~2008.12.31.)", cap: 0.9, periods: [{ to: "2008-12-31", m: 0.015, d: 0.0005 }] },
+      spedGB: { g: "gSpecial", name: "특수학교·특수학급·통합학급 담당 (~2007.2.28.)", cap: 0.9, grades: ["경희학교", "상희학교", "특수학급", "통합학급"], periods: [
+        { from: "1983-03-25", to: "2007-02-28", label: "경희학교", r: { "경희학교": [0.015, 0.0005] } },
+        { from: "1986-09-01", to: "2007-02-28", label: "상희학교", r: { "상희학교": [0.015, 0.0005] } },
+        { from: "1973-08-08", to: "1995-02-28", label: "특수학급 ~1995.2.", r: { "특수학급": [0.015, 0.0005] } },
+        { from: "1995-03-01", to: "2007-02-28", label: "특수학급 1995.3.~", r: { "특수학급": [0.010, 0.00033] } },
+        { from: "2002-03-01", to: "2007-02-28", label: "통합학급 2002.3.~", r: { "통합학급": [0.003, 0.0001] } }] },
+      supervisor: { g: "gSpecial", name: "장학사·교육연구사 근무경력", cap: 0.75, periods: [{ m: 0.015, d: 0.0005 }] },
+      researchChief: { g: "gSpecial", name: "연구학교 연구주무자 (2002.3.1.~)", cap: 3.0, periods: [{ from: "2002-03-01", m: 0.005, d: 0.00016 }] },
+      inventionGB: { g: "gSpecial", name: "발명교실 담당자 (2002.3.1.~)", cap: 3.0, periods: [{ from: "2002-03-01", m: 0.005, d: 0.00016 }] },
+      youthGB: { g: "gSpecial", name: "청소년단체 지도교사 (2009.1.1.~)", cap: 3.0, periods: [{ from: "2009-01-01", m: 0.001, d: 0.000033 }] },
+      longService: { g: "gSpecial", name: "장기경력 유공교사 (교사 경력 20년 초과 기간만 입력)", cap: 0.6, periods: [{ baseFrom: "2020-03-31", m: 0.01, d: 0.0003 }] },
+      vpLargeGB: { g: "gSpecial", name: "대규모 초등학교 교감 근무경력 (2020.3.1.~, 매년 4.1. 학급수)", cap: 0.6, grades: ["30~35학급", "36~40학급", "41학급 이상"], periods: [
+        { from: "2020-03-01", r: { "30~35학급": [0.01, 0.0003], "36~40학급": [0.015, 0.0005], "41학급 이상": [0.02, 0.0007] } }] }
+    },
+    /* 별책 「가산점 평정 대상학교」 농·어촌 진흥지역 초등학교 ‘가’지역 대상교 (72교) */
+    schools: [
+      ["ruralGB", "가지역", "대보초,양포초,송라초,기북초,월포초,장기초,장기초모포분교장,나산초,양남초,감포초,의곡초,양북초,석계초,모화초,대덕초,구성초,녹전초,온혜초,옥성초,무을초,부석초,옥대초,지곡초,고경초,중모초,모동초,모서초,용흥초,농암초,의흥초,우보초,송원초,다인초,단밀초,안계초,구천초,비안초,춘산초,옥전초,가음초,점곡초,화목초,안덕초,도평초,석보초,입암초,일월초,병곡초,창수초,원황초,남정초,축산항초,축산항초경정분교장,덕산초,유천초,박곡초,덕곡초,수륜초,가천초,풍양초,용궁초,은풍초,춘양초,명호초,법전중앙초,후포동부초,온정초,월송초,평해초,기성초,기성초구산분교,기성초사동분교장"]
+    ],
+    /* <별표10> 선택가산점 중복 경력 및 실적 인정 제한 기준 */
+    pairs: ["islandGB|ruralGB", "islandGB|supervisor", "islandGB|hansenGB", "islandGB|spedGB",
+      "research|research2", "head|hansenGB", "head|spedGB", "head|youthGB",
+      "ruralGB|hansenGB", "ruralGB|spedGB", "hansenGB|spedGB",
+      "supervisor|overseas", "supervisor|head", "supervisor|ruralGB", "supervisor|research2", "supervisor|hansenGB", "supervisor|spedGB",
+      "supervisor|researchChief", "supervisor|inventionGB", "supervisor|youthGB", "supervisor|vpLargeGB"],
+    groupCap: function (g, base, res) {
+      function v(k) { return res.items[k] ? res.items[k].val : 0; }
+      /* 도서·벽지/농어촌 합산 3.5는 2023.3.31. 평정부터 */
+      if (g === "gArea") return base != null && base < Date.parse("2023-03-31") ? 4.75 : 3.5;
+      if (g === "gRes") return Math.max(0, 1.0 - (res.items.research ? res.items.research.val : 0));
+      /* 한센/특수교육경력 합산 1.5 이내 */
+      if (g === "gSpecial") {
+        var sum = 0;
+        ["hansenGB", "spedGB", "supervisor", "researchChief", "inventionGB", "youthGB", "longService", "vpLargeGB"].forEach(function (k) { sum += v(k); });
+        Object.keys(res.items).forEach(function (k) { if (k.indexOf("manual_") === 0 && typeof ITEMS !== "undefined" && ITEMS[k] && ITEMS[k].g === "gSpecial") sum += v(k); });
+        var over = Math.max(0, v("hansenGB") + v("spedGB") - 1.5);
+        return over > 0 ? Math.min(3.0, sum - over) : null;
+      }
+      return null;
     }
   };
   // 전남·광주는 2026. 7. 1. 전남광주통합특별시교육청으로 통합. 가산점 규정이 하나로 정비되기 전까지 옛 관할구역별로 둔다.
