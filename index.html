@@ -304,7 +304,7 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
 
       <section class="card step" id="s5" data-kind="score">
         <h2><span class="no">5</span>자격면허 <small>→ 선택가산점 (국가기술 자격증)</small><span class="sec-pts" data-pts="s5"></span></h2>
-        <div class="grid-inputs" data-only="incheon:mid incheon:ele busan:mid busan:ele chungbuk:mid">
+        <div class="grid-inputs" data-only="incheon:mid incheon:ele busan:mid busan:ele chungbuk:mid gyeongnam:mid">
           <label for="cert">보유 자격증 최상위 등급 · 최대 0.5
             <select id="cert" data-k="cert">
               <option value="">해당 없음</option>
@@ -980,6 +980,76 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
       addCount("cert", "gCert", "국가기술자격·해기사·정보 관련 자격증", v, 0.5, st.cert ? st.cert + "등급" : "");
     }
   };
+
+  /* 경남 중등: 「2026. 교육공무원 평정업무 처리요령(중등)」과 부록 「교육공무원가산점평정규정(중등)」 [별표1·2] */
+  RULESETS["gyeongnam:mid"] = (function () {
+    var ruralR = function (a, b, c, d2) {
+      var r = {};
+      if (a) r["가"] = a; if (b) r["나"] = b; if (c) r["다"] = c; if (d2) r["라"] = d2;
+      return r;
+    };
+    return {
+      ready: true, source: "경상남도교육청 「2026. 교육공무원 평정업무 처리요령(중등)」·「교육공무원가산점평정규정(중등)」",
+      notice: "농어촌 학교 급지는 [자료 6.5]에서 확인해 직접 고르세요. 담임교사 등은 통산 3년을 넘는 기간만, 특수교육지원센터는 전입 후 최초 1년을 뺀 기간만 입력하세요. 교육연구대회·영재·발명·기능경기 실적은 ‘직접 입력 가산점’(실적가산점 그룹)으로 넣으세요. 농어촌·창원과학고·마이스터고 합산 1.25, 보직·장학사 합산 1.25 같은 소그룹 상한은 반영하지 않았습니다.",
+      certOptions: [["A", "기사·산업기사·정보처리기사·워드1급·컴활1·2급 등 0.3"], ["B", "기능사·정보처리기능사·워드2·3급·컴활3급 등 0.1"]],
+      groups: {
+        gRes: { name: "교육감 지정 연구학교·교육실습협력·꿈나르미학교 (공통 연구학교와 합산 1.0)", cap: 1.0 },
+        gDispatch: { name: "국내 파견근무 (재외 파견과 합산 0.5)", cap: 0.5 },
+        gArea: { name: "도서·벽지·준벽지·농어촌·도심지·특수교육 등", cap: 1.8 },
+        gHead: { name: "보직교사·장학사·담임교사 등", cap: 1.75 },
+        gPerf: { name: "실적가산점 (연구대회·영재·발명·기능경기·기술자격)", cap: 0.8 }
+      },
+      items: {
+        research2: { g: "gRes", name: "교육감 지정 연구·시범·실험학교", cap: 1.0, periods: [{ m: 0.0129, d: 0.00043 }] },
+        dream: { g: "gRes", name: "꿈나르미학교", cap: 1.0, periods: [{ m: 0.0129, d: 0.00043 }] },
+        practicumGN: { g: "gRes", name: "교육실습 대용(~2004.2.)·협력(2005.3.~)학교", cap: 0.58, periods: [
+          { to: "2004-02-29", label: "대용학교", m: 0.018, d: 0.0006 }, { from: "2005-03-01", label: "협력학교", m: 0.0129, d: 0.00043 }] },
+        ebs: { g: "gDispatch", name: "한국교육방송공사(EBS) 파견 (2012.3.1.~)", cap: 0.4, periods: [{ from: "2012-03-01", m: 0.017, d: 0.00057 }] },
+        eduCenter: { g: "gDispatch", name: "학생교육원 남해·낙동강·진산·칠북분원, 특수교육원 파견", cap: 0.4, periods: [{ m: 0.017, d: 0.00057 }] },
+        woopo: { g: "gDispatch", name: "우포생태교육원 근무", cap: 0.3, periods: [{ m: 0.015, d: 0.0005 }] },
+        dispatchGN: { g: "gDispatch", name: "도교육감 소속 교육기관 파견 (2002.1.1.~)", cap: 0.3, periods: [
+          { from: "2002-01-01", to: "2016-02-29", label: "~2016.2.", m: 0.0105, d: 0.00035 }, { from: "2016-03-01", label: "2016.3.~", m: 0.015, d: 0.0005 }] },
+        spedCenter: { g: "gDispatch", name: "특수교육지원센터 근무 (2017.3.1.~)", cap: 0.4, periods: [{ from: "2017-03-01", m: 0.0084, d: 0.0003 }] },
+        islandGN: { g: "gArea", name: "도서·벽지 근무경력 (라지역 상한 0.6)", cap: 0.9, grades: ["가", "나", "다", "라"], periods: [
+          { to: "1997-02-28", label: "~1997.2.", r: { "가": [0.125, 0.00417], "나": [0.096, 0.0032], "다": [0.066, 0.0022], "라": [0.037, 0.00123] } },
+          { from: "1997-03-01", to: "1997-12-31", label: "1997.3.~12.", r: { "가": [0.084, 0.0028], "나": [0.068, 0.00227], "다": [0.050, 0.00167], "라": [0.034, 0.00113] } },
+          { from: "1998-01-01", label: "1998~", r: { "가": [0.042, 0.0014], "나": [0.034, 0.00113], "다": [0.025, 0.00083], "라": [0.017, 0.00057] } }] },
+        semiRemote: { g: "gArea", name: "준벽지 학교 근무경력 (2014.1.1.~)", cap: 0.3, periods: [{ from: "2014-01-01", m: 0.0084, d: 0.00028 }] },
+        ruralGN: { g: "gArea", name: "농어촌학교 등 근무경력 ([자료 6.5] 급지)", cap: 1.25, grades: ["가", "나", "다", "라"], periods: [
+          { from: "1998-03-01", to: "2008-12-31", label: "~2008", r: ruralR([0.015, 0.0005], [0.015, 0.0005], [0.015, 0.0005], [0.015, 0.0005]) },
+          { from: "2009-01-01", to: "2013-12-31", label: "2009~2013", r: ruralR([0.015, 0.0005], [0.012, 0.0004]) },
+          { from: "2014-01-01", label: "2014~", r: ruralR([0.018, 0.0006], [0.015, 0.0005], [0.012, 0.0004]) },
+          { from: "2016-01-01", label: "2016~", r: ruralR(null, null, null, [0.009, 0.0003]) }] },
+        cwsh: { g: "gArea", name: "창원과학고 근무 (2011.3.1.~)", cap: 1.25, periods: [{ from: "2011-03-01", m: 0.015, d: 0.0005 }] },
+        meisterGN: { g: "gArea", name: "산업수요 맞춤형고(마이스터고) 근무 (2011.9.1.~)", cap: 1.25, periods: [{ from: "2011-09-01", m: 0.015, d: 0.0005 }] },
+        urban: { g: "gArea", name: "도심지역 학교 근무 (2017.3.1.~, 교사)", cap: 0.48, periods: [{ from: "2017-03-01", m: 0.004, d: 0.00013 }] },
+        excellentGN: { g: "gArea", name: "교육활동 우수교사 (2016.3.1.~2017.2.28.)", cap: 0.06, periods: [{ from: "2016-03-01", to: "2017-02-28", m: 0.005, d: 0.00016 }] },
+        spedGN: { g: "gArea", name: "특수학교 근무·특수학급 담당", cap: 1.0, grades: ["특수학교", "특수학급"],
+          periods: [{ r: { "특수학교": [0.018, 0.0006], "특수학급": [0.009, 0.0003] } }] },
+        head: { g: "gHead", name: "보직교사 경력 (장학사 경력과 합산 1.25)", cap: 1.25, periods: [{ m: 0.021, d: 0.0007 }] },
+        supervisor: { g: "gHead", name: "장학사·교육연구사 경력", cap: 0.75, periods: [{ m: 0.015, d: 0.0005 }] },
+        homeroom: { g: "gHead", name: "담임교사·부장·기숙사 사감 등 (통산 3년 초과분, 2012.9.1.~)", cap: 0.5, periods: [{ from: "2012-09-01", m: 0.00595, d: 0.000198 }] }
+      },
+      schools: [
+        ["islandGN", "다", "욕지중,사량중,한산중,덕유학생교육원"],
+        ["islandGN", "라", "마천중,산청야영수련원,학생교육원 남해분원,창녕학생야영수련원,경남학생교육원"],
+        ["semiRemote", "", "지세포중,원동중,미조중,화개중,야로중,야로고,미리벌중,거창덕유중"]
+      ],
+      /* 제10조 중복평정 금지 */
+      pairs: ["research|research2", "research|dream", "research|practicumGN",
+        "dispatchGN|islandGN", "dispatchGN|semiRemote", "dispatchGN|ruralGN", "eduCenter|islandGN", "eduCenter|ruralGN", "ebs|islandGN", "ebs|ruralGN",
+        "islandGN|supervisor"],
+      groupCap: function (g, base, res) {
+        if (g === "gRes") return Math.max(0, 1.0 - (res.items.research ? res.items.research.val : 0));
+        if (g === "gDispatch") return Math.max(0, 0.5 - (res.items.overseas ? res.items.overseas.val : 0));
+        return null;
+      },
+      counts: function (addCount, st) {
+        var v = { A: 0.3, B: 0.1 }[st.cert] || 0;
+        addCount("cert", "gPerf", "기술 자격 취득 실적", v, 0.3, st.cert ? st.cert + "등급" : "");
+      }
+    };
+  })();
 
   // 시·도와 학교급. RULESETS에 없는 조합은 선택가산점 없이 경력·근평·연수·공통가산점만 계산
   var REGIONS = [["seoul", "서울"], ["busan", "부산"], ["daegu", "대구"], ["incheon", "인천"], ["gwangju", "광주"], ["daejeon", "대전"],
