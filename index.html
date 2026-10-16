@@ -284,10 +284,10 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
         <div class="guide" role="note">
           <b>경력 등급 안내 (「교육공무원 승진규정」 별표 1, 평정대상자 직위: 교사)</b>
           <ul>
-            <li><b>가경력</b> — 각급학교 교장·교감·교사 경력, 장학관·교육연구관·장학사·교육연구사 경력</li>
-            <li><b>나경력</b> — 임용권자가 임용해 전임으로 근무한 강사·기간제교원(임시교원 포함) 경력, 교육공무원 임용 전 병역 의무로 징집·소집·근무한 경력</li>
+            <li><b>가경력</b> — 각급학교 교장·교감·교사 경력, 장학관·교육연구관·장학사·교육연구사 경력, <b>교육공무원 임용 전 병역 의무로 징집·소집·근무한 경력</b></li>
+            <li><b>나경력</b> — 임용권자가 임용해 전임으로 근무한 강사·기간제교원(임시교원 포함) 경력 (시간제 기간제교원은 근무시간 8시간을 1일로 환산)</li>
           </ul>
-          <p>병역 경력의 기본 등급은 <b>나경력</b>입니다. 학교에서 받은 경력평정표와 다르면 등급을 고치고, 인정되지 않은 경력은 빼세요. 호봉획정(15번)에서 인정된 비율과 경력평정 인정 여부는 별개입니다.</p>
+          <p>병역 경력의 기본 등급은 <b>가경력</b>입니다(교사 평정 기준. 교감·장학사 평정 때는 나경력). 「병역법」에 따른 군 의무 복무기간은 <b>3년 범위</b>에서 병적증명서의 실역 복무기간만 인정하고, 평정경력 20년 안에서 임용 직전 경력으로 계산합니다. 무관후보생 기간·산업기능요원 등 특례보충역은 제외됩니다. 호봉획정(15번)에서 인정된 비율과 경력평정 인정 여부는 별개입니다.</p>
         </div>
         <div class="mini-rows" id="careersMil"></div>
         <div class="row-actions"><button type="button" id="addCareerMil">복무 기간 추가</button></div>
@@ -315,7 +315,7 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
         </div>
         <p class="note" data-only="incheon:mid">교원자격증은 점수와 무관합니다. 국가기술 자격증은 상위 등급 1개만 인정하며, 2029. 3. 31.자 명부까지만 인정하고 이후 삭제됩니다.</p>
         <p class="note" data-only="incheon:ele">교원자격증은 점수와 무관합니다. 국가기술 자격증은 상위 등급 1개만 인정하며, 국가공인으로 인정받은 기간 안에 취득한 경우만 인정합니다.</p>
-        <p class="note reg-missing">이 시·도·학교급의 자격증 가산점 기준이 아직 등록되지 않았습니다.</p>
+        <p class="note" id="certMissing">이 시·도·학교급 기준에는 국가기술 자격증 가산점이 없거나 아직 등록되지 않았습니다.</p>
       </section>
 
       <section class="card step skip" id="s6" data-kind="none">
@@ -454,7 +454,7 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
         <div class="mini-rows" id="careers"></div>
         <div class="row-actions"><button type="button" id="addCareer">경력 추가</button></div>
         <div class="kv" id="careerOut"></div>
-        <p class="hint">정규 교사·교감·장학사·교육연구사 경력은 가경력입니다. 기간제·강사 경력과 병역은 나경력이며 2번·20번에서 따로 입력하면 합산됩니다 (별표 1, 평정대상자 직위: 교사).</p>
+        <p class="hint">정규 교사·교감·장학사·교육연구사 경력과 임용 전 병역은 가경력, 기간제·강사 경력은 나경력입니다. 2번·20번에서 따로 입력하면 합산됩니다 (승진규정 별표 1, 평정대상자 직위: 교사). 휴직 중 육아휴직·병역휴직 등은 10할, 유학·연수휴직 등은 5할을 평정하니 해당 기간은 행을 나눠 입력하세요.</p>
       </section>
 
       <section class="card step skip" id="s17" data-kind="none">
@@ -479,10 +479,10 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
         <div class="guide" role="note">
           <b>경력 등급 안내 (「교육공무원 승진규정」 별표 1, 평정대상자 직위: 교사)</b>
           <ul>
-            <li><b>가경력</b> — 각급학교 교장·교감·교사 경력, 장학관·교육연구관·장학사·교육연구사 경력</li>
-            <li><b>나경력</b> — 임용권자가 임용해 전임으로 근무한 강사·기간제교원(임시교원 포함) 경력, 교육공무원 임용 전 병역 의무로 징집·소집·근무한 경력</li>
+            <li><b>가경력</b> — 각급학교 교장·교감·교사 경력, 장학관·교육연구관·장학사·교육연구사 경력, <b>교육공무원 임용 전 병역 의무로 징집·소집·근무한 경력</b></li>
+            <li><b>나경력</b> — 임용권자가 임용해 전임으로 근무한 강사·기간제교원(임시교원 포함) 경력 (시간제 기간제교원은 근무시간 8시간을 1일로 환산)</li>
           </ul>
-          <p>임용 전 경력의 기본 등급은 <b>나경력</b>입니다. 학교에서 받은 경력평정표와 다르면 등급을 고치고, 인정되지 않은 경력은 빼세요. 호봉획정(15번)에서 인정된 비율과 경력평정 인정 여부는 별개입니다.</p>
+          <p>기간제·강사 경력의 기본 등급은 <b>나경력</b>입니다. 학교에서 받은 경력평정표와 다르면 등급을 고치고, 인정되지 않은 경력은 빼세요. 호봉획정(15번)에서 인정된 비율과 경력평정 인정 여부는 별개입니다.</p>
         </div>
         <div class="mini-rows" id="careersPre"></div>
         <div class="row-actions"><button type="button" id="addCareerPre">임용 전 경력 추가</button></div>
@@ -708,6 +708,71 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
         addCount("cert", "g5", "국가기술 자격증", certV, 0.5, st.cert ? st.cert + "등급" : "");
         addCount("youth", "g6", "청소년봉사단 지도교사", num(st.youth) * 0.06, 0.5, num(st.youth) ? num(st.youth) + "년 × 0.06" : "");
       }
+    },
+    /* 경기 중등: 2025년도 교육공무원인사관리세부기준·평정업무처리요령(중등), 2026. 2. 28. 평정 기준 (표 4) */
+    "gyeonggi:mid": {
+      ready: true, source: "경기도교육청 「2025년도 교육공무원인사관리세부기준·평정업무처리요령(중등)」 표 4 (2026. 2. 28. 평정 기준)",
+      notice: "1997. 12. 31. 이전 도서·벽지 경력(2배), 2009. 2. 28. 이전 농어촌 읍·면/동 구분, 타 시·도 취득 가산점 인정 등 경과 규정은 반영하지 않았습니다.",
+      selectCap: 7.5,
+      groups: {
+        g1: { name: "보직교사·교육전문직원 경력", cap: 2.0 },
+        g2: { name: "도서·벽지·농어촌·공단·접경 등 지역·학교 근무경력", cap: 1.5 },
+        g3: { name: "교육감·교육장 지정 연구·시범·선도학교 (공통 연구학교와 합산)", cap: 1.0 },
+        g4: { name: "담임·순회·파견·겸임 등 지도경력", cap: 3.0 }
+      },
+      items: {
+        head: { g: "g1", name: "보직교사(부장교사) 경력 · 1급 정교사·전문상담교사", cap: 2.0, periods: [{ m: 0.027, d: 0.0009 }] },
+        supervisor: { g: "g1", name: "장학사·교육연구사 경력", cap: 0.75, periods: [{ m: 0.012, d: 0.0004 }] },
+        islandGG: { g: "g2", name: "도서·벽지 및 접적지역 근무경력", cap: 1.5, grades: ["가", "나", "다", "라"],
+          periods: [{ r: { "가": [0.045, 0.0015], "나": [0.039, 0.0013], "다": [0.033, 0.0011], "라": [0.027, 0.0009] } }] },
+        ruralGG: { g: "g2", name: "농어촌·공단지역 학교 근무경력", cap: 1.5, grades: ["면", "읍", "공단"],
+          periods: [{ r: { "면": [0.015, 0.0005], "읍": [0.012, 0.0004], "공단": [0.009, 0.0003] } }] },
+        border: { g: "g2", name: "접경지역 학교 근무경력 (2004.1.1.~2014.2.28.)", cap: 1.5, periods: [{ from: "2004-01-01", to: "2014-02-28", m: 0.015, d: 0.0005 }] },
+        specialHS: { g: "g2", name: "특성화고(대안학교) 근무경력", cap: 1.0, periods: [{ from: "2004-01-01", m: 0.015, d: 0.0005 }] },
+        highSchool: { g: "g2", name: "고등학교 근무경력 (2005.1.1.~2009.2.28.)", cap: 0.6, periods: [{ from: "2005-01-01", to: "2009-02-28", m: 0.012, d: 0.0004 }] },
+        meister: { g: "g2", name: "산업수요 맞춤형 고등학교 근무경력", cap: 0.8, periods: [{ from: "2011-03-01", m: 0.0081, d: 0.00027 }] },
+        research2: { g: "g3", name: "도교육감 지정 연구·시범·실험학교", cap: 1.0, periods: [{ from: "2003-01-01", m: 0.015, d: 0.0005 }] },
+        researchLocal: { g: "g3", name: "교육장(시·군) 지정 연구·시범·실험학교", cap: 1.0, periods: [{ from: "2003-01-01", m: 0.0075, d: 0.00025 }] },
+        leadSchool: { g: "g3", name: "교육감 지정 선도·중심학교, 교과특성화학교 등 유공", cap: 1.0, periods: [{ from: "2003-03-01", m: 0.015, d: 0.0005 }] },
+        homeroom: { g: "g4", name: "담임·순회·파견·겸임교사, 공동실습소, 체전·기능대회 지도 등", cap: 3.0, periods: [{ m: 0.021, d: 0.0007 }] },
+        olympiad: { g: "g4", name: "국제올림피아드 지도교사", cap: 0.72, periods: [{ from: "2003-01-01", m: 0.021, d: 0.0007 }] },
+        invention: { g: "g4", name: "발명교실 지도교사 (2007.3.1.~2022.2.28.)", cap: 0.72, periods: [{ from: "2007-03-01", to: "2022-02-28", m: 0.012, d: 0.0004 }] },
+        youthGG: { g: "g4", name: "청소년단체 지도교사 (2002.1.1.~2022.2.28.)", cap: 0.64, periods: [
+          { from: "2002-01-01", to: "2007-12-31", label: "~2007.12.31.", m: 0.009, d: 0.0003 },
+          { from: "2008-01-01", to: "2022-02-28", label: "2008.1.1.~", m: 0.006, d: 0.0002 }] }
+      },
+      schools: [
+        // 표 1 도서·벽지 및 접적지역 (현재 지정, 현재 급지)
+        ["islandGG", "나", "탄현중,백학중,경기도학생김포야영장"],
+        ["islandGG", "다", "파평중,적성융합고,대광중,군남중,경기도교직원연천수덕원,경기도학생연천야영장"],
+        ["islandGG", "라", "어유중,파주중,세경고,하성중,하성고,분진중,경기도교직원가평수덕원"],
+        // 표 2 농어촌·공단 (2026. 2. 28. 현재, 2009. 3. 1. 이후 급지)
+        ["ruralGG", "면", "가평북중,설악중,조종중,청평중,설악고,조종고,청평고,광수중,광일중,별내중,청학고,대곶중,청산중,백암중,백암고,원삼중," +
+          "이천경남중,대월중,마장중,모가중,백사중,율면중,마장고,이천세무고,율면고,한국도예고,이천사동중,경기새울학교," +
+          "서운중,양성중,일죽중,죽산중,일죽고,죽산고,신나는학교,강하중,국수중,양수중,지평중,청운중,청운고,양평전자과학고,지평고," +
+          "강천중,상품중,이포중,점동중,흥천중,이포고,점동고,여주중,여주자영농고,평택화양중,경북중,내촌중,일동중,일동고,포천일고," +
+          "관인중,삼성중,영북중,영중중,이동중,포천여중,포천중,관인고,영북고,양감중,정남중,청연중"],
+        ["ruralGG", "읍", "가평중,가평고,곤지암중,곤지암고,초월중,초월고,덕소중,화광중,마석중,송라중,진접중,양오중,어람중,오남중,남양주고,와부중,진건중," +
+          "퇴계원중,퇴계원고,광릉중,예봉중,와부고,진건고,오남고,풍양중,주곡중,진접고,마석고,천마중,고촌중,신곡중,신양중,마송중,마송고,고촌고,향산중," +
+          "연천중,연천고,전곡중,전곡고,용인바이오고,포곡중,영문중,용천중,포곡고,용인삼계고,한숲중,처인고,처인중,도현중," +
+          "장호원중,장호원고,부발중,효양중,효양고,법원여중,봉일천중,봉일천고,문산북중,선유중,문산고,양주백석중,양주백석고,대부중,대부고," +
+          "공도중,양진중,경기창조고,만정중,양평중,양평고,안일중,경기물류고,청북중,포승중,현화중,도곡중,현화고,청옥중,청북고," +
+          "갈월중,대경중,송우중,송우고,발안중,발안바이오과학고,남양중,남양고,봉담중,화성동화중,와우중,봉담고,향남중,향남고,향일고,하길중,하길고," +
+          "신백중,수현중,와우고,화담중,화담고,화성상신중," +
+          // 표 3 접경지역 현재 지정교: 2013·2014년부터 읍지역과 같은 점수
+          "동두천중앙고,동두천외고,송내중앙중,생연중,신흥중,신흥고,동두천여중,동두천중,보영여중,동두천고,보영여고,한국문화영상고,문산중,문산제일고,포천고"],
+        ["ruralGG", "공단", "군자디지털과고,서해중,송운중,시흥중,정왕중,서해고,정왕고,경기스마트고,시화중,월곶중,군서고,배곧중,배곧고,배곧해솔중," +
+          "군서미래국제학교,시화나래중,배곧라라중,관산중,별망중,원곡중,원곡고,초지고,단원중,석수중,양지중,원일중,고잔고,초지중,선일중,양지고," +
+          "안산해양중,단원고,신길중,신길고,선부고,안산해솔중"]
+      ],
+      /* 동일 기간 중복 평정 금지 (처리요령 Ⅶ-18) */
+      pairs: ["research|research2", "research|researchLocal", "research|leadSchool", "supervisor|islandGG",
+        "head|homeroom", "head|olympiad", "head|invention", "head|youthGG"],
+      /* 교육감·교육장 지정 연구학교 등은 교육부 지정 연구학교(공통)와 합산 1.0 */
+      groupCap: function (g, base, res) {
+        if (g !== "g3") return null;
+        return Math.max(0, 1.0 - (res.items.research ? res.items.research.val : 0));
+      }
     }
   };
   // 시·도와 학교급. RULESETS에 없는 조합은 선택가산점 없이 경력·근평·연수·공통가산점만 계산
@@ -769,7 +834,7 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
   var RULE_DEFAULTS = {
     cBaseYears: 15, cExtraYears: 5, cBaseMax: 64, cExtraMax: 6,
     cGaM: 0.3555, cGaD: 0.0118, cNaM: 0.3333, cNaD: 0.0111, cDaM: 0.3111, cDaD: 0.0103,
-    xGaM: 0.1, xGaD: 0.0033, xNaM: 0.0833, xNaD: 0.0027, xDaM: 0.0667, xDaD: 0.0022,
+    xGaM: 0.1, xGaD: 0.0033, xNaM: 0.0833, xNaD: 0.0027, xDaM: 0.0666, xDaD: 0.0022,
     pPool: 5, pPick: 3, pW1: 34, pW2: 33, pW3: 33,
     tScorePts: 6, tCountPts: 6, tCountMax: 2, tJobMax: 18, tStep: 1,
     qMax: 9, qK: 0.05, eduMax: 27,
@@ -799,7 +864,7 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
     var s = blank();
     s.sample = true;
     s.careers = [
-      { id: nid(), src: "병역", grade: "나", from: "2008-04-01", to: "2010-01-31", note: "육군 병장 (예시)" },
+      { id: nid(), src: "병역", grade: "가", from: "2008-04-01", to: "2010-01-31", note: "육군 병장 (예시)" },
       { id: nid(), src: "경력", grade: "가", from: "2011-03-01", to: "", note: "중등 교사 (예시)" }];
     s.perfs = [["2022", "96.2"], ["2023", "97.5"], ["2024", "95.8"], ["2025", "98.1"], ["2026", "97.4"]].map(function (x) { return { id: nid(), year: x[0], score: x[1] }; });
     s.jobs = [["수업 디자인 직무연수 (예시)", "2023", "98.5"], ["학생 생활교육 직무연수 (예시)", "2024", "94"], ["AI 활용 교육 직무연수 (예시)", "2025", ""]].map(function (x) { return { id: nid(), name: x[0], year: x[1], score: x[2] }; });
@@ -875,7 +940,7 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
       itemSub[sk] = (itemSub[sk] || 0) + pts;
       if (!res.items[a.item]) res.items[a.item] = { raw: 0, lines: [] };
       var per = ITEMS[a.item].periods[a.idx];
-      res.items[a.item].lines.push((a.grade ? a.grade + (a.grade.length === 1 ? "구역" : "") + " " : "") + (per.label ? "[" + per.label + "] " : "") + fmtSpan({ m: a.m, d: a.d }));
+      res.items[a.item].lines.push((a.grade ? gradeLabel(a.grade) + " " : "") + (per.label ? "[" + per.label + "] " : "") + fmtSpan({ m: a.m, d: a.d }));
     });
     Object.keys(itemSub).forEach(function (sk) {
       var parts = sk.split("|"), it = ITEMS[parts[0]], per = it.periods[+parts[1]];
@@ -917,7 +982,7 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
     Object.keys(GROUPS).forEach(function (g) {
       var sum = 0, items = [];
       Object.keys(res.items).forEach(function (k) { if (ITEMS[k].g === g) { sum += res.items[k].val; items.push(k); } });
-      var rc = REG.groupCap ? REG.groupCap(g, base) : null;
+      var rc = REG.groupCap ? REG.groupCap(g, base, res) : null;
       var cap = rc != null ? rc : GROUPS[g].cap;
       res.groups[g] = { raw: sum, cap: cap, val: cap == null ? sum : Math.min(sum, cap), items: items };
     });
@@ -925,7 +990,8 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
     var sel = 0;
     Object.keys(GROUPS).forEach(function (g) { if (g !== "common") sel += res.groups[g].val; });
     res.selectRaw = sel;
-    res.select = Math.min(sel, 10);
+    res.selectCap = REG.selectCap || 10;
+    res.select = Math.min(sel, res.selectCap);
     res.total = res.common + res.select;
 
     // 중복 경력 검사
@@ -947,7 +1013,7 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
     }
     if (res.items.research && res.items.research2 && res.items.research.raw + res.items.research2.raw > 1.0)
       res.warns.push("교육부·교육감 지정 연구학교 경력은 합산 1.0점을 넘을 수 없어 교육감지정 쪽을 줄였습니다.");
-    if (sel > 10) res.warns.push("선택가산점 총합계 10점 상한을 넘어 잘렸습니다.");
+    if (sel > res.selectCap) res.warns.push("선택가산점 총합계 " + res.selectCap + "점 상한을 넘어 잘렸습니다.");
     return res;
   }
 
@@ -1036,8 +1102,7 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
     if (v > 95) return 100;
     if (v > 90) return 95;
     if (v > 85) return 90;
-    if (v > 80) return 85;
-    return 80;
+    return 85;
   }
   function computeTraining() {
     var out = { used: {}, counted: {} };
@@ -1085,6 +1150,8 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
   }
 
   /* ---------- 렌더링 ---------- */
+  /* 구역 표기: A~E는 "A구역", 가~라는 "가지역", 그 밖(읍·면·공단 등)은 그대로 */
+  function gradeLabel(g) { return /^[A-Z]$/.test(g) ? g + "구역" : /^[가나다라]$/.test(g) ? g + "지역" : g; }
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
   var ITEM_OPTIONS = "";
   function buildItemOptions() {
@@ -1108,7 +1175,7 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
       var row = document.createElement("div");
       row.className = "prow"; row.dataset.id = p.id;
       var gradeSel = it.grades
-        ? '<select data-f="grade" id="g_' + p.id + '">' + it.grades.map(function (g) { return '<option value="' + esc(g) + '"' + (g === p.grade ? " selected" : "") + ">" + esc(g.length === 1 ? g + "구역" : g) + "</option>"; }).join("") + "</select>"
+        ? '<select data-f="grade" id="g_' + p.id + '">' + it.grades.map(function (g) { return '<option value="' + esc(g) + '"' + (g === p.grade ? " selected" : "") + ">" + esc(gradeLabel(g)) + "</option>"; }).join("") + "</select>"
         : '<select disabled id="g_' + p.id + '"><option>–</option></select>';
       row.innerHTML =
         '<label class="item-sel" for="i_' + p.id + '">항목<select data-f="item" id="i_' + p.id + '">' + ITEM_OPTIONS + "</select></label>" +
@@ -1195,6 +1262,7 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
     var key = state.region + ":" + state.level, label = nameOf(REGIONS, state.region) + " " + nameOf(LEVELS, state.level);
     document.querySelectorAll("[data-only]").forEach(function (el) { el.hidden = el.dataset.only.split(" ").indexOf(key) < 0; });
     document.querySelectorAll(".reg-missing").forEach(function (el) { el.hidden = !!REG.ready; });
+    document.getElementById("certMissing").hidden = !document.getElementById("cert").closest("[data-only]").hidden;
     var hasSchools = Object.keys(SCHOOLS).length > 0;
     document.querySelector(".school-find").hidden = !hasSchools;
     document.getElementById("schoolHint").hidden = !hasSchools;
@@ -1257,7 +1325,7 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
     document.getElementById("sumAll").textContent = f4(res.total);
     document.getElementById("sumCommon").textContent = f4(res.common);
     document.getElementById("sumSelect").textContent = f4(res.select);
-    document.getElementById("sumCap").textContent = "선택가산점 상한 10점 · 공통가산점은 항목별 상한";
+    document.getElementById("sumCap").textContent = "선택가산점 상한 " + res.selectCap + "점 · 공통가산점은 항목별 상한";
 
     var mh = "";
     Object.keys(GROUPS).forEach(function (g) {
@@ -1302,9 +1370,9 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
           '</td><td class="n' + (r && r.raw > r.val + 1e-9 ? " cut" : "") + '">' + (val ? f4(val) : "–") + '</td><td class="n">' + f2(cap) + '</td><td class="n' + (left < 1e-9 && val > 0 ? " full" : "") + '">' + (left < 1e-9 ? (val > 0 ? "상한 도달" : "0") : f4(left)) + "</td></tr>";
       });
     });
-    var selCap = Math.min(10, selectMax);
+    var selCap = Math.min(res.selectCap, selectMax);
     th += '<tr class="tot"><td>공통가산점 최대</td><td class="n">' + f4(res.common) + '</td><td class="n">' + f2(commonMax) + '</td><td class="n">' + f4(Math.max(0, commonMax - res.common)) + "</td></tr>";
-    th += '<tr class="tot"><td>선택가산점 최대 <small>(그룹 상한 합계, 총합계 상한 10점)</small></td><td class="n">' + f4(res.select) + '</td><td class="n">' + f2(selCap) + '</td><td class="n">' + f4(Math.max(0, selCap - res.select)) + "</td></tr>";
+    th += '<tr class="tot"><td>선택가산점 최대 <small>(그룹 상한 합계, 총합계 상한 ' + res.selectCap + '점)</small></td><td class="n">' + f4(res.select) + '</td><td class="n">' + f2(selCap) + '</td><td class="n">' + f4(Math.max(0, selCap - res.select)) + "</td></tr>";
     th += '<tr class="tot"><td><b>가산점 전체 최대</b></td><td class="n"><b>' + f4(res.total) + '</b></td><td class="n"><b>' + f2(commonMax + selCap) + '</b></td><td class="n"><b>' + f4(Math.max(0, commonMax + selCap - res.total)) + "</b></td></tr>";
     th += "</tbody>";
     document.getElementById("detail").innerHTML = th;
@@ -1417,7 +1485,7 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
   var defaultHint = sHint.textContent;
   sInput.addEventListener("input", function () {
     var hit = SCHOOLS[sInput.value.trim()];
-    sHint.textContent = hit ? sInput.value.trim() + " → " + ITEMS[hit.item].name + " " + hit.grade + "구역" : defaultHint;
+    sHint.textContent = hit ? sInput.value.trim() + " → " + ITEMS[hit.item].name + " " + gradeLabel(hit.grade) : defaultHint;
   });
   document.getElementById("addFromSchool").addEventListener("click", function () {
     var name = sInput.value.trim(), hit = SCHOOLS[name];
@@ -1454,8 +1522,8 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
   function addCareerOf(src) {
     return function () {
       var ends = careersOf(src).map(function (c) { return parse(c.to); }).filter(function (x) { return x != null; });
-      // 별표 1: 교사 평정 시 병역·기간제·강사 경력은 나경력
-      return { id: nid(), src: src, grade: src === "경력" ? "가" : "나", from: ends.length ? new Date(Math.max.apply(null, ends) + DAY).toISOString().slice(0, 10) : "", to: "", note: "" };
+      // 별표 1(교사 평정): 임용 전 병역은 가경력, 기간제·강사 경력은 나경력
+      return { id: nid(), src: src, grade: src === "임용전" ? "나" : "가", from: ends.length ? new Date(Math.max.apply(null, ends) + DAY).toISOString().slice(0, 10) : "", to: "", note: "" };
     };
   }
   document.getElementById("addCareer").addEventListener("click", miniHandlers("careers", "careers", addCareerOf("경력")));
@@ -1560,7 +1628,7 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
         case "시도": if (nameOf(REGIONS, v[0])) s.region = v[0]; if (nameOf(LEVELS, v[1])) s.level = v[1]; break;
         case "경력평정":
           var src = CAREER_SRC.indexOf(v[4]) >= 0 ? v[4] : "경력";
-          s.careers.push({ id: nid(), src: src, grade: GRADE_KEY[v[0]] ? v[0] : (src === "경력" ? "가" : "나"), from: v[1], to: v[2], note: v[3] });
+          s.careers.push({ id: nid(), src: src, grade: GRADE_KEY[v[0]] ? v[0] : (src === "임용전" ? "나" : "가"), from: v[1], to: v[2], note: v[3] });
           break;
         case "근무성적": s.perfs.push({ id: nid(), year: v[0], score: v[1] }); break;
         case "직무연수": s.jobs.push({ id: nid(), name: v[0], year: v[1], score: v[2] }); break;
