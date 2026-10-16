@@ -66,6 +66,7 @@ input, select, textarea {
   background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 7px 9px; min-width: 0; width: 100%;
 }
 input[type="number"] { font-family: var(--font-num); }
+input:invalid { border-color: var(--over); box-shadow: inset 0 0 0 1px var(--over); }
 input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 button { cursor: pointer; border-radius: 4px; padding: 7px 12px; border: 1px solid var(--line); background: var(--surface); }
 button.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); font-weight: 500; }
@@ -228,7 +229,7 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
         <h2>평정 기준</h2>
         <div class="toolbar">
           <label for="baseDate">평정 기준일 (학년도 종료일)
-            <input type="date" id="baseDate">
+            <input type="date" id="baseDate" min="1950-01-01" max="2099-12-31">
           </label>
           <p class="note" style="flex:1 1 260px">종료일을 비워 둔 경력은 기준일까지 계산합니다. 기준일 이후 기간은 잘라냅니다. 3월 31일자 명부는 보통 그해 2월 말일이 기준일입니다.</p>
         </div>
@@ -566,6 +567,7 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
   function parse(s) {
     if (!s || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return null;
     var p = s.split("-").map(Number);
+    if (p[0] < 1950 || p[0] > 2099) return null; // 잘못 입력한 연도는 계산에서 뺌
     return Date.UTC(p[0], p[1] - 1, p[2]);
   }
   function addMonths(t, n) {
@@ -786,7 +788,7 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
   var GRADE_KEY = { "가": "Ga", "나": "Na", "다": "Da" };
   function r4(x) { return Math.round(x * 10000) / 10000; }
   function computeCareer() {
-    var base = parse(state.baseDate), out = { base: 0, extra: 0, baseSpan: { m: 0, d: 0 }, extraSpan: { m: 0, d: 0 }, rows: {} };
+    var base = parse(state.baseDate), out = { base: 0, extra: 0, total: 0, max: R("cBaseMax") + R("cExtraMax"), baseSpan: { m: 0, d: 0 }, extraSpan: { m: 0, d: 0 }, rows: {} };
     if (base == null) return out;
     var baseStart = addMonths(base + DAY, -12 * R("cBaseYears"));
     var extraStart = addMonths(baseStart, -12 * R("cExtraYears"));
@@ -943,8 +945,8 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
       row.innerHTML =
         '<label class="item-sel" for="i_' + p.id + '">항목<select data-f="item" id="i_' + p.id + '">' + ITEM_OPTIONS + "</select></label>" +
         '<label for="g_' + p.id + '">구역·구분' + gradeSel + "</label>" +
-        '<label for="f_' + p.id + '">시작일<input type="date" data-f="from" id="f_' + p.id + '" value="' + esc(p.from) + '"></label>' +
-        '<label for="t_' + p.id + '">종료일<input type="date" data-f="to" id="t_' + p.id + '" value="' + esc(p.to) + '"></label>' +
+        '<label for="f_' + p.id + '">시작일<input type="date" min="1950-01-01" max="2099-12-31" data-f="from" id="f_' + p.id + '" value="' + esc(p.from) + '"></label>' +
+        '<label for="t_' + p.id + '">종료일<input type="date" min="1950-01-01" max="2099-12-31" data-f="to" id="t_' + p.id + '" value="' + esc(p.to) + '"></label>' +
         '<div class="calc" data-calc></div>' +
         '<button type="button" class="ghost" data-del aria-label="이 경력 삭제" title="삭제">✕</button>' +
         '<div class="memo"><input data-f="note" id="n_' + p.id + '" placeholder="메모 (학교명, 보직 등)" value="' + esc(p.note) + '" aria-label="메모"></div>';
@@ -972,7 +974,10 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
           return '<label for="' + id + '">' + f.label + '<select data-f="' + f.k + '" id="' + id + '">' +
             f.options.map(function (o) { return '<option value="' + esc(o[0]) + '"' + (String(c[f.k]) === o[0] ? " selected" : "") + ">" + esc(o[1]) + "</option>"; }).join("") + "</select></label>";
         }
-        return '<label for="' + id + '">' + f.label + '<input type="' + f.type + '" data-f="' + f.k + '" id="' + id + '" value="' + esc(c[f.k]) + '" min="0" step="' + (f.step || 1) + '" placeholder="' + (f.ph || "") + '"></label>';
+        var attrs = f.type === "year" ? 'type="text" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" data-year'
+          : f.type === "date" ? 'type="date" min="1950-01-01" max="2099-12-31"'
+          : 'type="' + f.type + '" min="0" step="' + (f.step || 1) + '"';
+        return '<label for="' + id + '">' + f.label + '<input ' + attrs + ' data-f="' + f.k + '" id="' + id + '" value="' + esc(c[f.k]) + '" placeholder="' + (f.ph || "") + '"></label>';
       }).join("") + '<button type="button" class="ghost" data-del aria-label="삭제" title="삭제">✕</button>';
       el.appendChild(d);
     });
@@ -1001,7 +1006,7 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
     document.querySelectorAll("[data-k]").forEach(function (el) { el.value = state[el.dataset.k] == null ? "" : state[el.dataset.k]; });
     document.getElementById("sampleBanner").hidden = !state.sample;
     renderPeriods();
-    renderMini("credits", state.credits, [{ k: "year", label: "학년도", type: "number", ph: "2025" }, { k: "credits", label: "이수 학점", type: "number", step: "0.5", ph: "4" }]);
+    renderMini("credits", state.credits, [{ k: "year", label: "학년도", type: "year", ph: "2025" }, { k: "credits", label: "이수 학점", type: "number", step: "0.5", ph: "4" }]);
     renderMini("semesters", state.semesters, [{ k: "label", label: "학기", type: "text", ph: "2026-1학기" }, { k: "months", label: "운영 개월 수", type: "number", step: "0.5", ph: "3" }]);
     var careerFields = function (ph, toLabel) {
       return [
@@ -1013,14 +1018,14 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
     renderMini("careersMil", careersOf("병역"), careerFields("군별·계급", "전역일"), "c4");
     renderMini("careersPre", careersOf("임용전"), careerFields("기관·직위 (기간제 등)", "종료일"), "c4");
     renderMini("perfs", state.perfs, [
-      { k: "year", label: "평정 연도", type: "number", ph: "2026" },
+      { k: "year", label: "평정 연도", type: "year", ph: "2026" },
       { k: "score", label: "합산점 (100점 만점)", type: "number", step: "0.001", ph: "97.5" }, { tag: true }], "c3");
     renderMini("jobs", state.jobs, [
       { k: "name", label: "연수명", type: "text", ph: "○○ 직무연수 (60시간)" },
-      { k: "year", label: "이수 연도", type: "number", ph: "2025" },
+      { k: "year", label: "이수 연도", type: "year", ph: "2025" },
       { k: "score", label: "성적 (없으면 비움)", type: "number", step: "0.01", ph: "98.5" }, { tag: true }], "c4");
     renderMini("contests", state.contests, [
-      { k: "year", label: "입상 연도", type: "number", ph: "2024" },
+      { k: "year", label: "입상 연도", type: "year", ph: "2024" },
       { k: "level", label: "규모", type: "select", options: [["전국", "전국 규모"], ["시도", "시·도 규모"]] },
       { k: "rank", label: "등급", type: "select", options: [["1", "1등급"], ["2", "2등급"], ["3", "3등급"]] }, { tag: true }], "c4");
     renderMini("degrees", state.degrees, [
@@ -1188,6 +1193,10 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
     el.addEventListener("input", function (e) {
       var row = e.target.closest(".mini-row"); if (!row) return;
       var c = state[key].find(function (x) { return x.id === row.dataset.id; }); if (!c) return;
+      if (e.target.hasAttribute("data-year")) {
+        var clean = e.target.value.replace(/\D/g, "").slice(0, 4);
+        if (clean !== e.target.value) e.target.value = clean;
+      }
       c[e.target.dataset.f] = e.target.value; touch(); renderResults();
     });
     el.addEventListener("click", function (e) {
