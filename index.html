@@ -1,0 +1,807 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>중등 승진 가산점 계산기</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;700&family=Nanum+Myeongjo:wght@800&display=swap">
+<style>
+/* Layout: 인사기록카드처럼 입력 장부(왼쪽) + 평정 요약 카드(오른쪽 고정), 휴대폰에서는 요약이 위로 */
+:root {
+  --bg: #F1F4F7;
+  --surface: #FFFFFF;
+  --ink: #18212E;
+  --muted: #5B687A;
+  --line: #D6DCE4;
+  --accent: #1D5A86;
+  --accent-soft: #E3EDF5;
+  --ok: #2E8A5C;
+  --warn: #A76A10;
+  --warn-soft: #FBF1DF;
+  --over: #B3352B;
+  --font-display: "Nanum Myeongjo", "Batang", serif;
+  --font-body: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --font-num: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --r: 6px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0F141B; --surface: #171E28; --ink: #E5EAF1; --muted: #93A0B2; --line: #2A3442;
+    --accent: #79AEDB; --accent-soft: #1C2A3A; --ok: #5FBE8D; --warn: #E2AE52; --warn-soft: #2C2415; --over: #E8786C;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0F141B; --surface: #171E28; --ink: #E5EAF1; --muted: #93A0B2; --line: #2A3442;
+  --accent: #79AEDB; --accent-soft: #1C2A3A; --ok: #5FBE8D; --warn: #E2AE52; --warn-soft: #2C2415; --over: #E8786C;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 15px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 24px 48px;
+}
+.wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 24px; }
+header { display: grid; gap: 6px; }
+.eyebrow { font-size: 12px; letter-spacing: .08em; color: var(--muted); }
+h1 { font-family: var(--font-display); font-weight: 800; font-size: clamp(26px, 4vw, 36px); margin: 0; line-height: 1.25; text-wrap: balance; }
+.lede { color: var(--muted); max-width: 68ch; margin: 0; }
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 24px; align-items: start; }
+@media (max-width: 900px) { .layout { grid-template-columns: minmax(0, 1fr); } .summary { order: -1; position: static !important; } }
+main { display: grid; gap: 20px; min-width: 0; }
+section.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 18px; display: grid; gap: 14px; min-width: 0; }
+h2 { font-size: 17px; margin: 0; display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+h2 small { font-weight: 400; color: var(--muted); font-size: 13px; }
+h3 { font-size: 14px; margin: 0; color: var(--muted); font-weight: 500; letter-spacing: .02em; }
+p.note { margin: 0; font-size: 13px; color: var(--muted); }
+label { font-size: 12px; color: var(--muted); display: grid; gap: 4px; }
+input, select, textarea, button { font: inherit; color: var(--ink); }
+input, select, textarea {
+  background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 7px 9px; min-width: 0; width: 100%;
+}
+input[type="number"] { font-family: var(--font-num); }
+input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+button { cursor: pointer; border-radius: 4px; padding: 7px 12px; border: 1px solid var(--line); background: var(--surface); }
+button.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); font-weight: 500; }
+button.ghost { border-color: transparent; background: transparent; color: var(--muted); padding: 6px 8px; }
+button.ghost:hover { color: var(--over); }
+.row-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.banner { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; justify-content: space-between; background: var(--warn-soft); border: 1px solid var(--line); border-radius: var(--r); padding: 10px 14px; font-size: 14px; }
+.toolbar { display: flex; gap: 12px; flex-wrap: wrap; align-items: end; }
+.toolbar label { width: 190px; }
+
+/* 경력 기간 행 */
+.periods { display: grid; gap: 8px; }
+.prow { display: grid; grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr) minmax(0, 1.25fr) minmax(0, 1.25fr) 112px 34px; gap: 8px; align-items: end; padding: 10px; border: 1px solid var(--line); border-radius: 4px; }
+.prow .calc { font-family: var(--font-num); font-size: 13px; text-align: right; line-height: 1.35; padding-bottom: 4px; }
+.prow .calc b { display: block; font-weight: 500; color: var(--ink); }
+.prow .calc span { color: var(--muted); }
+.prow .memo { grid-column: 1 / -1; }
+.prow .memo input { font-size: 13px; padding: 5px 8px; }
+@media (max-width: 640px) {
+  .prow { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .prow .item-sel { grid-column: 1 / -1; }
+  .prow .calc { text-align: left; }
+}
+.school-find { display: flex; gap: 8px; flex-wrap: wrap; align-items: end; }
+.school-find label { flex: 1 1 220px; }
+.hint { font-size: 12px; color: var(--muted); }
+
+.grid-inputs { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; }
+.mini-rows { display: grid; gap: 6px; }
+.mini-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; gap: 8px; align-items: end; }
+.sub { display: grid; gap: 10px; padding-top: 12px; border-top: 1px dashed var(--line); }
+
+/* 요약 */
+.summary { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 18px; display: grid; gap: 14px; min-width: 0; }
+.total { display: grid; gap: 2px; }
+.total .num { font-family: var(--font-num); font-size: 40px; font-weight: 500; line-height: 1.1; color: var(--accent); }
+.total .cap { font-size: 13px; color: var(--muted); }
+.split { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.split div { background: var(--accent-soft); border-radius: 4px; padding: 8px 10px; }
+.split .k { font-size: 12px; color: var(--muted); }
+.split .v { font-family: var(--font-num); font-size: 18px; font-variant-numeric: tabular-nums; }
+.meters { display: grid; gap: 10px; }
+.meter { display: grid; gap: 4px; }
+.meter .top { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; }
+.meter .top .val { font-family: var(--font-num); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.bar { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--accent); border-radius: 3px; }
+.meter.full .bar i { background: var(--ok); }
+.meter.full .top .val::after { content: " 상한"; color: var(--ok); font-family: var(--font-body); font-size: 11px; }
+.meter .lost { font-size: 12px; color: var(--over); }
+
+.warns { display: grid; gap: 6px; }
+.warn { font-size: 13px; background: var(--warn-soft); border-left: 3px solid var(--warn); padding: 7px 10px; border-radius: 0 4px 4px 0; }
+
+/* 상세표 */
+.tbl-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; min-width: 520px; }
+th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 500; color: var(--muted); font-size: 12px; }
+td.n { font-family: var(--font-num); text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+tr.grp td { background: var(--accent-soft); font-weight: 500; }
+.cut { color: var(--over); }
+
+.overall { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; align-items: end; }
+.overall .sum { font-family: var(--font-num); font-size: 22px; }
+details summary { cursor: pointer; font-weight: 500; }
+details[open] summary { margin-bottom: 8px; }
+.rules { font-size: 13px; color: var(--muted); display: grid; gap: 6px; margin: 0; padding-left: 18px; }
+textarea { font-family: var(--font-num); font-size: 12px; min-height: 90px; }
+.toast { font-size: 13px; color: var(--ok); min-height: 1.4em; }
+footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
+@media (prefers-reduced-motion: no-preference) { .bar i { transition: width .25s ease; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">인천광역시교육청 공고 제2026-319호 · 2026. 7. 24. 개정 기준</div>
+    <h1>중등 승진 가산점 계산기</h1>
+    <p class="lede">나이스에서 내려받은 인사기록카드의 경력·연수·상훈 내용을 옮겨 적으면 「교육공무원승진규정 중 가산점 부여기준(중등)」에 따라 공통가산점과 선택가산점을 간이로 계산합니다. 입력한 내용은 이 브라우저에만 저장됩니다.</p>
+  </header>
+
+  <div class="banner" id="sampleBanner" hidden>
+    <span>지금 보이는 값은 <b>예시 데이터</b>입니다. 본인 인사기록카드 내용으로 바꿔 입력하세요.</span>
+    <button type="button" id="clearSample" class="primary">예시 지우고 새로 입력</button>
+  </div>
+
+  <div class="layout">
+    <main>
+      <section class="card">
+        <h2>평정 기준</h2>
+        <div class="toolbar">
+          <label for="baseDate">평정 기준일 (학년도 종료일)
+            <input type="date" id="baseDate">
+          </label>
+          <p class="note" style="flex:1 1 260px">종료일을 비워 둔 경력은 기준일까지 계산합니다. 기준일 이후 기간은 잘라냅니다. 3월 31일자 명부는 보통 그해 2월 말일이 기준일입니다.</p>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>경력 기간 <small>인사기록카드 ‘경력사항’, 보직·담임 기록</small></h2>
+        <div class="school-find">
+          <label for="schoolSearch">학교명으로 항목 찾기
+            <input id="schoolSearch" list="schoolList" placeholder="예: 강화고, 인천하늘중">
+          </label>
+          <button type="button" id="addFromSchool">이 학교로 경력 추가</button>
+          <datalist id="schoolList"></datalist>
+        </div>
+        <p class="hint" id="schoolHint">도서·벽지, 특수지역 지정 학교·기관 목록에서 찾아 항목과 구역을 자동으로 채웁니다.</p>
+        <div class="periods" id="periods"></div>
+        <div class="row-actions">
+          <button type="button" id="addPeriod" class="primary">경력 추가</button>
+        </div>
+        <p class="note">1개월 미만은 일 단위로 계산합니다. 같은 항목·구역의 여러 기간은 합산하며 30일을 1개월로 넘깁니다.</p>
+      </section>
+
+      <section class="card">
+        <h2>공통가산점 실적 <small>연수이수실적, 학교폭력 예방 실적</small></h2>
+        <div class="sub" style="border-top:0;padding-top:0">
+          <h3>직무연수 학점 (학점당 0.02, 학년도별 0.08 상한, 총 1.0)</h3>
+          <div class="mini-rows" id="credits"></div>
+          <div class="row-actions"><button type="button" id="addCredit">학년도 추가</button></div>
+        </div>
+        <div class="grid-inputs">
+          <label for="violence">학교폭력 예방·대응 실적 (연수)
+            <input type="number" id="violence" min="0" step="1" data-k="violence">
+          </label>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>선택가산점 실적 <small>건수·등급으로 매기는 항목</small></h2>
+        <div class="sub" style="border-top:0;padding-top:0">
+          <h3>교육감인정 연구경력</h3>
+          <div class="grid-inputs">
+            <label for="prac26">교육실습 2주 이상 6주 미만 (회)
+              <input type="number" id="prac26" min="0" step="1" data-k="prac26">
+            </label>
+            <label for="prac68">교육실습 6주 이상 8주 이하 (회)
+              <input type="number" id="prac68" min="0" step="1" data-k="prac68">
+            </label>
+            <label for="award1">수업연구 발표대회 1등급 (회)
+              <input type="number" id="award1" min="0" step="1" data-k="award1">
+            </label>
+            <label for="award2">2등급 (회)
+              <input type="number" id="award2" min="0" step="1" data-k="award2">
+            </label>
+            <label for="award3">3등급 (회)
+              <input type="number" id="award3" min="0" step="1" data-k="award3">
+            </label>
+          </div>
+          <h3>실습학기제 교육실습 (월 0.01, 학기당 0.03 상한)</h3>
+          <div class="mini-rows" id="semesters"></div>
+          <div class="row-actions"><button type="button" id="addSemester">학기 추가</button></div>
+          <p class="note">교실수업개선 입상실적은 2020. 2. 29. 이전 취득분까지만 인정합니다. 연구실적으로 평정된 입상은 중복 평정하지 않습니다.</p>
+        </div>
+        <div class="sub">
+          <h3>국가기술 자격증 소지</h3>
+          <div class="grid-inputs">
+            <label for="cert">보유 자격증 최상위 등급
+              <select id="cert" data-k="cert">
+                <option value="">해당 없음</option>
+                <option value="A">A등급 (기사·워드1급·컴활1급 등) 0.5</option>
+                <option value="B">B등급 (기능사·워드2~3급 등) 0.25</option>
+              </select>
+            </label>
+          </div>
+          <p class="note">상위 등급 1개만 인정합니다. 2029. 3. 31.자 명부까지만 인정하고 이후 삭제됩니다.</p>
+        </div>
+        <div class="sub">
+          <h3>인천교육 공헌실적</h3>
+          <div class="grid-inputs">
+            <label for="youth">청소년봉사단 지도교사 (연수)
+              <input type="number" id="youth" min="0" step="1" data-k="youth">
+            </label>
+          </div>
+          <p class="note">중심학교·자율학교 담당, 담임교사 경력은 위 ‘경력 기간’에 기간으로 입력하세요.</p>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>항목별 상세</h2>
+        <div class="tbl-wrap"><table id="detail"></table></div>
+      </section>
+
+      <section class="card">
+        <h2>승진 평정 합계 (참고) <small>다른 평정점은 직접 입력</small></h2>
+        <div class="overall">
+          <label for="career">경력평정점
+            <input type="number" id="career" step="0.001" min="0" data-k="career" placeholder="만점 70">
+          </label>
+          <label for="perf">근무성적평정점
+            <input type="number" id="perf" step="0.001" min="0" data-k="perf" placeholder="만점 100">
+          </label>
+          <label for="training">연수성적평정점
+            <input type="number" id="training" step="0.001" min="0" data-k="training" placeholder="만점 30">
+          </label>
+          <div>
+            <div class="hint">합계 (가산점 포함)</div>
+            <div class="sum" id="overallSum">–</div>
+          </div>
+        </div>
+        <p class="note">경력·근무성적·연수성적은 학교에서 받은 평정 결과나 본인 계산값을 넣으세요. 만점 표시는 참고용이며 최신 「교육공무원 승진규정」을 확인하세요.</p>
+      </section>
+
+      <section class="card">
+        <details>
+          <summary>입력 내용 백업·불러오기</summary>
+          <div style="display:grid;gap:10px">
+            <p class="note">다른 기기로 옮기거나 보관하려면 백업 코드를 복사해 두세요. 불러올 때는 아래 칸에 붙여넣고 ‘불러오기’를 누르세요.</p>
+            <textarea id="backup" aria-label="백업 코드"></textarea>
+            <div class="row-actions">
+              <button type="button" id="copyBackup">백업 코드 복사</button>
+              <button type="button" id="loadBackup">불러오기</button>
+              <button type="button" id="resetAll" class="ghost">전체 초기화</button>
+            </div>
+            <div class="toast" id="toast" role="status"></div>
+          </div>
+        </details>
+      </section>
+
+      <section class="card">
+        <details>
+          <summary>중복 경력 처리 기준 (제5조 ⑧항)</summary>
+          <ul class="rules">
+            <li>같은 그룹 안에서 같은 기간 평정사유가 2개 이상이면 유리한 경력 하나만 평정합니다.</li>
+            <li>도서·벽지 또는 농어촌 경력과 학교교육 유공경력은 2015. 3. 1.~2017. 2. 28. 기간에 한해 학교교육 유공경력 50% 중복 인정합니다.</li>
+            <li>연구학교 경력(공통)은 교육감지정 연구·정책추진학교, 교육실습 대용·협력학교, 교실수업개선, 도서·벽지 교육진흥 유공과 택일합니다.</li>
+            <li>보직교사 경력은 한센병환자자녀 지도, 특수교육대상자(통합학급) 지도, 담임교사, 보직교사 근무경력과 택일합니다.</li>
+            <li>보직교사 근무경력·특수교육대상자 지도경력은 담임교사 경력과 택일합니다.</li>
+            <li>장학사·교육연구사 경력과 도서·벽지 경력, 도서·벽지·농어촌 경력과 한센병환자자녀·특수교육대상자 지도경력, 특수지역·학교교육 유공경력과 특수교육대상자 지도경력은 택일합니다.</li>
+          </ul>
+          <p class="note" style="margin-top:8px">이 계산기는 중복을 찾아 경고만 하고 자동으로 빼지는 않습니다. 경고가 뜨면 불리한 쪽 기간을 조정하세요.</p>
+        </details>
+      </section>
+
+      <footer>이 계산기는 고시문을 바탕으로 한 간이 계산 도구이며 공식 평정 결과가 아닙니다. 부칙의 경과조치, 자격 종류별 평정기간(예: 2급 정교사 보직경력은 2023. 3. 1. 이후) 등 세부 요건은 학교 승진 담당자 확인이 필요합니다.</footer>
+    </main>
+
+    <aside class="summary" aria-label="평정 요약">
+      <div class="total">
+        <div class="eyebrow">가산점 합계</div>
+        <div class="num" id="sumAll">0.0000</div>
+        <div class="cap" id="sumCap"></div>
+      </div>
+      <div class="split">
+        <div><div class="k">공통가산점</div><div class="v" id="sumCommon">0</div></div>
+        <div><div class="k">선택가산점</div><div class="v" id="sumSelect">0</div></div>
+      </div>
+      <div class="meters" id="meters"></div>
+      <div class="warns" id="warns"></div>
+    </aside>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var DAY = 864e5;
+  var STORE = "incheon-promo-calc-v1";
+
+  /* ---------- 기준표 (공고 제2026-319호) ---------- */
+  var GROUPS = {
+    common: { name: "공통가산점", cap: null },
+    g1: { name: "지역근무 및 유공경력", cap: 2.75 },
+    g2: { name: "보직교사·전문직 근무경력", cap: 1.75 },
+    g3: { name: "특수교육·한센병 지도 및 보직교사 근무경력", cap: 1.0 },
+    g4: { name: "교육감인정 연구경력", cap: 1.0 },
+    g5: { name: "국가기술 자격증 소지", cap: 0.5 },
+    g6: { name: "인천교육 공헌실적", cap: 1.0 }
+  };
+  function legacy(name, from, to) { return { g: "g6", name: name, cap: 0.5, periods: [{ from: from, to: to, m: 0.005, d: 0.00017 }] }; }
+  var ITEMS = {
+    research: { g: "common", name: "연구학교 근무 (교육부장관 지정)", cap: 1.0, periods: [{ m: 0.018, d: 0.0006 }] },
+    overseas: { g: "common", name: "재외국민교육기관 파견", cap: 0.5, periods: [{ m: 0.015, d: 0.0005 }] },
+    island: { g: "g1", name: "도서·벽지 경력", cap: 2.0, grades: ["A", "B", "C", "D", "E"],
+      periods: [{ r: { A: [0.056, 0.00187], B: [0.046, 0.00153], C: [0.036, 0.0012], D: [0.026, 0.00087], E: [0.020, 0.00067] } }] },
+    rural: { g: "g1", name: "농어촌 경력", cap: 1.5, periods: [{ m: 0.020, d: 0.00067 }] },
+    special: { g: "g1", name: "특수지역 교육활동 경력", cap: 1.0, grades: ["A", "B", "C"],
+      periods: [{ r: { A: [0.02, 0.00067], B: [0.015, 0.0005], C: [0.01, 0.00033] } }] },
+    merit: { g: "g1", name: "학교교육 유공경력", cap: 2.0, periods: [{ m: 0.022, d: 0.00073 }] },
+    head: { g: "g2", name: "보직교사 경력", cap: 1.75, periods: [{ m: 0.021, d: 0.0007 }] },
+    supervisor: { g: "g2", name: "장학사·교육연구사 근무경력", cap: 1.25, periods: [{ m: 0.021, d: 0.0007 }] },
+    sped: { g: "g3", name: "특수교육대상자 지도경력 (2019.2.28.까지)", cap: 1.0, grades: ["특수학교", "특수학급", "통합학급"],
+      periods: [{ to: "2019-02-28", r: { "특수학교": [0.021, 0.0007], "특수학급": [0.0105, 0.00035], "통합학급": [0.0053, 0.00018] } }] },
+    hansen: { g: "g3", name: "한센병환자자녀 지도경력", cap: 1.0, periods: [{ m: 0.021, d: 0.0007 }] },
+    head2: { g: "g3", name: "보직교사 근무경력 (2019.3.1. 이후)", cap: 0.3, periods: [{ from: "2019-03-01", m: 0.005, d: 0.00017 }] },
+    research2: { g: "g4", name: "교육감지정 연구·정책추진학교", cap: 1.0, periods: [{ m: 0.01, d: 0.00033 }] },
+    islandMerit: { g: "g4", name: "도서·벽지 교육진흥 유공경력", cap: 0.5, grades: ["A", "B", "C"],
+      periods: [
+        { from: "2022-03-01", to: "2025-02-28", sub: 0.3, label: "2022.3.1.~2025.2.28.", r: { A: [0.005, 0.00017], B: [0.004, 0.00014], C: [0.003, 0.00011] } },
+        { from: "2025-03-01", label: "2025.3.1.~", r: { A: [0.01, 0.00033], B: [0.0081, 0.00027], C: [0.0063, 0.00021] } }
+      ] },
+    newSchool: { g: "g4", name: "신설학교 근무경력 (2027.3.1. 이후)", cap: 0.5, periods: [{ from: "2027-03-01", m: 0.0045, d: 0.00015 }] },
+    hub: { g: "g6", name: "중심학교 담당교사", cap: 0.5, periods: [{ from: "2009-03-01", m: 0.005, d: 0.00017 }] },
+    autonomous: { g: "g6", name: "자율학교 담당교사", cap: 0.5, periods: [{ from: "2016-03-01", m: 0.005, d: 0.00017 }] },
+    homeroom: { g: "g6", name: "담임교사 경력", cap: 0.3, periods: [{ from: "2016-03-01", m: 0.003, d: 0 }] },
+    leadTeacher: legacy("수업개선 선도교사 (폐지)", "2013-03-01", "2021-02-28"),
+    native: legacy("원어민대체교사 (폐지)", null, "2011-02-28"),
+    gifted: legacy("영재교육 담당교사 (폐지)", "2006-03-01", "2016-02-29"),
+    cyber: legacy("사이버학습배정형담임교사 (폐지)", "2009-03-01", "2016-02-29"),
+    society: legacy("교과연구회 우수교사 (폐지)", "2009-03-01", "2016-02-29"),
+    scholar: legacy("장학지원단 (폐지)", "2009-03-01", "2016-02-29"),
+    advisor: legacy("인천정책자문위원 (폐지)", "2009-03-01", "2016-02-29"),
+    policy: legacy("인천교원정책추진지원단 (폐지)", "2011-03-01", "2016-02-29")
+  };
+
+  var SCHOOLS = {};
+  function addSchools(item, grade, names) { names.split(",").forEach(function (n) { SCHOOLS[n.trim()] = { item: item, grade: grade }; }); }
+  addSchools("island", "A", "연평중,연평고,백령중,백령고,대청중,대청고");
+  addSchools("island", "B", "덕적중,덕적고,교동중,교동고,서도중,서도고,인천난정평화교육원");
+  addSchools("island", "C", "영흥중,인천영흥고,강서중,서사체험학습장");
+  addSchools("island", "D", "강화교육지원청");
+  addSchools("island", "E", "강화중,강화고,강화여중,강화여고,국화리 학생야영장");
+  addSchools("special", "A", "용유중,인천국제고,인천과학고,흥왕체험학습장,해양환경체험학습장");
+  addSchools("special", "B", "인천공항중,영종중,인천중산중,인천공항고,인천영종고,영종국제물류고,인천하늘중,인천중산고,인천운서중,인천운남고,AI융합교육원,인천교육연수원,동아시아국제교육원");
+  addSchools("special", "C", "화도진중,청천중,함박중,백석중,인천석남중,신현중,인천소방고,인천체고");
+
+  /* 그룹 간 택일 대상 (제5조 ⑧항) */
+  var PAIRS = ["research|research2", "research|islandMerit", "head|hansen", "head|sped", "head|homeroom", "head2|homeroom", "head|head2",
+    "sped|homeroom", "supervisor|island", "island|hansen", "island|sped", "rural|hansen", "rural|sped", "special|sped", "merit|sped"];
+  var PAIRSET = {};
+  PAIRS.forEach(function (p) { var a = p.split("|"); PAIRSET[a[0] + "|" + a[1]] = PAIRSET[a[1] + "|" + a[0]] = true; });
+
+  /* ---------- 날짜 계산 ---------- */
+  function parse(s) {
+    if (!s || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return null;
+    var p = s.split("-").map(Number);
+    return Date.UTC(p[0], p[1] - 1, p[2]);
+  }
+  function addMonths(t, n) {
+    var d = new Date(t), y = d.getUTCFullYear(), m = d.getUTCMonth() + n, day = d.getUTCDate();
+    var last = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+    return Date.UTC(y, m, Math.min(day, last));
+  }
+  /* 시작일~종료일(포함)을 개월 + 일로 */
+  function span(s, e) {
+    if (s == null || e == null || e < s) return { m: 0, d: 0 };
+    var end = e + DAY, ds = new Date(s), de = new Date(end);
+    var m = (de.getUTCFullYear() - ds.getUTCFullYear()) * 12 + (de.getUTCMonth() - ds.getUTCMonth());
+    while (m > 0 && addMonths(s, m) > end) m--;
+    if (m < 0) m = 0;
+    return { m: m, d: Math.round((end - addMonths(s, m)) / DAY) };
+  }
+  function fmtSpan(sp) {
+    var y = Math.floor(sp.m / 12), m = sp.m % 12, out = [];
+    if (y) out.push(y + "년");
+    if (m) out.push(m + "개월");
+    if (sp.d || !out.length) out.push(sp.d + "일");
+    return out.join(" ");
+  }
+  function f4(x) { return (Math.round(x * 10000) / 10000).toFixed(4); }
+
+  /* ---------- 상태 ---------- */
+  var uid = 0;
+  function nid() { return "p" + Date.now().toString(36) + (uid++); }
+  function blank() {
+    return { sample: false, baseDate: "2027-02-28", periods: [], credits: [], semesters: [],
+      violence: "", prac26: "", prac68: "", award1: "", award2: "", award3: "", cert: "", youth: "",
+      career: "", perf: "", training: "" };
+  }
+  function sample() {
+    var s = blank();
+    s.sample = true;
+    s.periods = [
+      { id: nid(), item: "island", grade: "E", from: "2013-03-01", to: "2017-02-28", note: "강화고 (예시)" },
+      { id: nid(), item: "special", grade: "A", from: "2017-03-01", to: "2021-02-28", note: "인천국제고 (예시)" },
+      { id: nid(), item: "special", grade: "B", from: "2021-03-01", to: "", note: "인천하늘중 (예시)" },
+      { id: nid(), item: "homeroom", grade: "", from: "2016-03-01", to: "2021-02-28", note: "담임 (예시)" },
+      { id: nid(), item: "head", grade: "", from: "2021-03-01", to: "", note: "교무부장 (예시)" },
+      { id: nid(), item: "research", grade: "", from: "2018-03-01", to: "2020-02-29", note: "교육부 지정 연구학교 (예시)" }
+    ];
+    s.credits = [{ id: nid(), year: "2023", credits: "6" }, { id: nid(), year: "2024", credits: "3" }, { id: nid(), year: "2025", credits: "4" }];
+    s.violence = "4";
+    s.award2 = "1";
+    s.prac26 = "2";
+    s.youth = "2";
+    return s;
+  }
+  var state;
+  try { var raw = localStorage.getItem(STORE); state = raw ? JSON.parse(raw) : null; } catch (e) { state = null; }
+  if (!state || typeof state !== "object") state = sample();
+  state = Object.assign(blank(), state);
+  function save() { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) {} }
+
+  /* ---------- 계산 ---------- */
+  function num(v) { var n = parseFloat(v); return isFinite(n) && n > 0 ? n : 0; }
+  function clip(s, e, lo, hi) {
+    var a = Math.max(s, lo == null ? -Infinity : lo), b = Math.min(e, hi == null ? Infinity : hi);
+    return b >= a ? [a, b] : null;
+  }
+  /* 한 경력 행을 평정구간별로 나눔 */
+  function segments(p, base) {
+    var it = ITEMS[p.item]; if (!it) return [];
+    var s = parse(p.from), e = p.to ? parse(p.to) : base;
+    if (s == null || e == null) return [];
+    if (base != null) e = Math.min(e, base);
+    var out = [];
+    it.periods.forEach(function (per, i) {
+      var c = clip(s, e, parse(per.from), parse(per.to));
+      if (!c) return;
+      var rate = per.r ? per.r[p.grade] : [per.m, per.d];
+      if (!rate) return;
+      out.push({ idx: i, s: c[0], e: c[1], sp: span(c[0], c[1]), rm: rate[0], rd: rate[1] });
+    });
+    return out;
+  }
+  function segPts(sp, rm, rd) { return sp.m * rm + sp.d * rd; }
+
+  function compute() {
+    var base = parse(state.baseDate);
+    var res = { items: {}, rows: {}, warns: [] };
+    // 경력 기간 집계: 항목 > 평정구간 > 구역 별로 개월·일 합산
+    var agg = {};
+    state.periods.forEach(function (p) {
+      var segs = segments(p, base), pts = 0, tot = { m: 0, d: 0 };
+      segs.forEach(function (g) {
+        pts += segPts(g.sp, g.rm, g.rd); tot.m += g.sp.m; tot.d += g.sp.d;
+        var k = p.item + "|" + g.idx + "|" + (p.grade || "");
+        if (!agg[k]) agg[k] = { item: p.item, idx: g.idx, grade: p.grade || "", m: 0, d: 0, rm: g.rm, rd: g.rd };
+        agg[k].m += g.sp.m; agg[k].d += g.sp.d;
+      });
+      res.rows[p.id] = { segs: segs, pts: pts, tot: tot };
+    });
+    var itemRaw = {}, itemSub = {};
+    Object.keys(agg).forEach(function (k) {
+      var a = agg[k];
+      a.m += Math.floor(a.d / 30); a.d = a.d % 30;
+      var pts = a.m * a.rm + a.d * a.rd;
+      var sk = a.item + "|" + a.idx;
+      itemSub[sk] = (itemSub[sk] || 0) + pts;
+      if (!res.items[a.item]) res.items[a.item] = { raw: 0, lines: [] };
+      var per = ITEMS[a.item].periods[a.idx];
+      res.items[a.item].lines.push((a.grade ? a.grade + (ITEMS[a.item].grades.length > 3 ? "" : "구역") + " " : "") + (per.label ? "[" + per.label + "] " : "") + fmtSpan({ m: a.m, d: a.d }));
+    });
+    Object.keys(itemSub).forEach(function (sk) {
+      var parts = sk.split("|"), it = ITEMS[parts[0]], per = it.periods[+parts[1]];
+      var v = per.sub != null ? Math.min(itemSub[sk], per.sub) : itemSub[sk];
+      res.items[parts[0]].raw += v;
+    });
+
+    // 건수 항목
+    function addCount(key, g, name, raw, cap, line) {
+      ITEMS[key] = ITEMS[key] || { g: g, name: name, cap: cap, count: true, periods: [] };
+      if (raw > 0) res.items[key] = { raw: raw, lines: line ? [line] : [] };
+    }
+    var byYear = {};
+    state.credits.forEach(function (c) { var y = (c.year || "").trim() || "?"; byYear[y] = (byYear[y] || 0) + num(c.credits); });
+    var cr = 0, crLines = [];
+    Object.keys(byYear).sort().forEach(function (y) {
+      var v = Math.min(byYear[y] * 0.02, 0.08); cr += v; crLines.push(y + "학년도 " + byYear[y] + "학점 → " + f4(v));
+    });
+    addCount("credits", "common", "직무연수 이수실적 (학점)", cr, 1.0, crLines.join(", "));
+    addCount("violence", "common", "학교폭력 예방·대응 실적", num(state.violence) * 0.1, 1.0, num(state.violence) ? num(state.violence) + "년 × 0.1" : "");
+    var sem = 0;
+    state.semesters.forEach(function (s) { sem += Math.min(num(s.months) * 0.01, 0.03); });
+    var prac = num(state.prac26) * 0.01 + num(state.prac68) * 0.02 + sem;
+    addCount("practicum", "g4", "교육실습 대용·협력학교 근무경력", prac, 1.0,
+      [num(state.prac26) ? "2~6주 " + num(state.prac26) + "회" : "", num(state.prac68) ? "6~8주 " + num(state.prac68) + "회" : "", state.semesters.length ? "실습학기제 " + state.semesters.length + "학기" : ""].filter(Boolean).join(", "));
+    var aw = num(state.award1) * 0.15 + num(state.award2) * 0.10 + num(state.award3) * 0.05;
+    addCount("award", "g4", "교실수업개선 연구경력 (2020.2.29.까지)", aw, 1.0,
+      [num(state.award1) ? "1등급 " + num(state.award1) : "", num(state.award2) ? "2등급 " + num(state.award2) : "", num(state.award3) ? "3등급 " + num(state.award3) : ""].filter(Boolean).join(", "));
+    var certOk = base == null || base <= parse("2029-02-28");
+    var certV = state.cert === "A" ? 0.5 : state.cert === "B" ? 0.25 : 0;
+    addCount("cert", "g5", "국가기술 자격증", certOk ? certV : 0, 0.5, state.cert ? state.cert + "등급" + (certOk ? "" : " (2029.3.31. 명부 이후 삭제)") : "");
+    addCount("youth", "g6", "청소년봉사단 지도교사", num(state.youth) * 0.06, 0.5, num(state.youth) ? num(state.youth) + "년 × 0.06" : "");
+
+    // 항목 상한 적용
+    Object.keys(res.items).forEach(function (k) {
+      var r = res.items[k], cap = ITEMS[k].cap;
+      if (k === "research2") cap = Math.max(0, 1.0 - Math.min(res.items.research ? res.items.research.raw : 0, 1.0));
+      r.cap = cap; r.val = Math.min(r.raw, cap);
+    });
+    // 그룹 상한 적용
+    var g1cap = base != null && base >= parse("2030-02-28") ? 3.0 : 2.75;
+    res.groups = {};
+    Object.keys(GROUPS).forEach(function (g) {
+      var sum = 0, items = [];
+      Object.keys(res.items).forEach(function (k) { if (ITEMS[k].g === g) { sum += res.items[k].val; items.push(k); } });
+      var cap = g === "g1" ? g1cap : GROUPS[g].cap;
+      res.groups[g] = { raw: sum, cap: cap, val: cap == null ? sum : Math.min(sum, cap), items: items };
+    });
+    res.common = res.groups.common.val;
+    var sel = 0;
+    Object.keys(GROUPS).forEach(function (g) { if (g !== "common") sel += res.groups[g].val; });
+    res.selectRaw = sel;
+    res.select = Math.min(sel, 10);
+    res.total = res.common + res.select;
+
+    // 중복 경력 검사
+    var ps = state.periods.filter(function (p) { return res.rows[p.id] && res.rows[p.id].segs.length; });
+    for (var i = 0; i < ps.length; i++) for (var j = i + 1; j < ps.length; j++) {
+      var a = ps[i], b = ps[j], ra = res.rows[a.id], rb = res.rows[b.id];
+      var as = Math.min.apply(null, ra.segs.map(function (x) { return x.s; })), ae = Math.max.apply(null, ra.segs.map(function (x) { return x.e; }));
+      var bs = Math.min.apply(null, rb.segs.map(function (x) { return x.s; })), be = Math.max.apply(null, rb.segs.map(function (x) { return x.e; }));
+      if (Math.max(as, bs) > Math.min(ae, be)) continue;
+      var A = ITEMS[a.item], B = ITEMS[b.item], msg = null;
+      var label = "‘" + A.name + "’과 ‘" + B.name + "’";
+      if (a.item === b.item) msg = "‘" + A.name + "’ 기간이 서로 겹칩니다. 같은 기간은 한 번만 평정하므로 날짜를 확인하세요.";
+      else if (A.g === B.g && A.g !== "common") {
+        var pair = [a.item, b.item].sort().join("|");
+        if (pair === "island|merit" || pair === "merit|rural") msg = label + " 기간이 겹칩니다. 2015.3.1.~2017.2.28.만 유공경력 50% 중복 인정, 그 밖에는 유리한 하나만 평정합니다.";
+        else msg = label + " 기간이 겹칩니다. 같은 그룹 안에서는 유리한 경력 하나만 평정합니다.";
+      } else if (PAIRSET[a.item + "|" + b.item]) msg = label + " 기간이 겹칩니다. 중복 경력 처리 기준상 택일 대상입니다.";
+      if (msg) res.warns.push(msg);
+    }
+    if (res.items.research && res.items.research2 && res.items.research.raw + res.items.research2.raw > 1.0)
+      res.warns.push("교육부·교육감 지정 연구학교 경력은 합산 1.0점을 넘을 수 없어 교육감지정 쪽을 줄였습니다.");
+    if (sel > 10) res.warns.push("선택가산점 총합계 10점 상한을 넘어 잘렸습니다.");
+    return res;
+  }
+
+  /* ---------- 렌더링 ---------- */
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  var ITEM_OPTIONS = (function () {
+    var html = "";
+    Object.keys(GROUPS).forEach(function (g) {
+      var opts = Object.keys(ITEMS).filter(function (k) { return ITEMS[k].g === g && !ITEMS[k].count; });
+      if (!opts.length) return;
+      html += '<optgroup label="' + esc(GROUPS[g].name) + '">' + opts.map(function (k) { return '<option value="' + k + '">' + esc(ITEMS[k].name) + "</option>"; }).join("") + "</optgroup>";
+    });
+    return html;
+  })();
+
+  var periodsEl = document.getElementById("periods");
+  function renderPeriods() {
+    periodsEl.innerHTML = "";
+    if (!state.periods.length) {
+      periodsEl.innerHTML = '<p class="note">아직 입력한 경력이 없습니다. ‘경력 추가’를 누르거나 학교명으로 찾아 추가하세요.</p>';
+    }
+    state.periods.forEach(function (p) {
+      var it = ITEMS[p.item] || ITEMS.island;
+      var row = document.createElement("div");
+      row.className = "prow"; row.dataset.id = p.id;
+      var gradeSel = it.grades
+        ? '<select data-f="grade" id="g_' + p.id + '">' + it.grades.map(function (g) { return '<option value="' + esc(g) + '"' + (g === p.grade ? " selected" : "") + ">" + esc(g.length === 1 ? g + "구역" : g) + "</option>"; }).join("") + "</select>"
+        : '<select disabled id="g_' + p.id + '"><option>–</option></select>';
+      row.innerHTML =
+        '<label class="item-sel" for="i_' + p.id + '">항목<select data-f="item" id="i_' + p.id + '">' + ITEM_OPTIONS + "</select></label>" +
+        '<label for="g_' + p.id + '">구역·구분' + gradeSel + "</label>" +
+        '<label for="f_' + p.id + '">시작일<input type="date" data-f="from" id="f_' + p.id + '" value="' + esc(p.from) + '"></label>' +
+        '<label for="t_' + p.id + '">종료일<input type="date" data-f="to" id="t_' + p.id + '" value="' + esc(p.to) + '"></label>' +
+        '<div class="calc" data-calc></div>' +
+        '<button type="button" class="ghost" data-del aria-label="이 경력 삭제" title="삭제">✕</button>' +
+        '<div class="memo"><input data-f="note" id="n_' + p.id + '" placeholder="메모 (학교명, 보직 등)" value="' + esc(p.note) + '" aria-label="메모"></div>';
+      row.querySelector('[data-f="item"]').value = p.item;
+      periodsEl.appendChild(row);
+    });
+  }
+  function renderCalcCells(res) {
+    periodsEl.querySelectorAll(".prow").forEach(function (row) {
+      var r = res.rows[row.dataset.id], cell = row.querySelector("[data-calc]");
+      if (!r || !r.segs.length) { cell.innerHTML = "<b>–</b><span>날짜 확인</span>"; return; }
+      cell.innerHTML = "<b>" + f4(r.pts) + "</b><span>" + fmtSpan(r.tot) + "</span>";
+    });
+  }
+  function renderMini(elId, list, fields) {
+    var el = document.getElementById(elId);
+    el.innerHTML = "";
+    list.forEach(function (c) {
+      var d = document.createElement("div");
+      d.className = "mini-row"; d.dataset.id = c.id;
+      d.innerHTML = fields.map(function (f) {
+        return '<label for="' + f.k + "_" + c.id + '">' + f.label + '<input type="' + f.type + '" data-f="' + f.k + '" id="' + f.k + "_" + c.id + '" value="' + esc(c[f.k]) + '" min="0" step="' + (f.step || 1) + '" placeholder="' + (f.ph || "") + '"></label>';
+      }).join("") + '<button type="button" class="ghost" data-del aria-label="삭제" title="삭제">✕</button>';
+      el.appendChild(d);
+    });
+    if (!list.length) el.innerHTML = '<p class="note">입력한 항목이 없습니다.</p>';
+  }
+  function renderStatic() {
+    document.getElementById("baseDate").value = state.baseDate || "";
+    document.querySelectorAll("[data-k]").forEach(function (el) { el.value = state[el.dataset.k] == null ? "" : state[el.dataset.k]; });
+    document.getElementById("sampleBanner").hidden = !state.sample;
+    renderPeriods();
+    renderMini("credits", state.credits, [{ k: "year", label: "학년도", type: "number", ph: "2025" }, { k: "credits", label: "이수 학점", type: "number", step: "0.5", ph: "4" }]);
+    renderMini("semesters", state.semesters, [{ k: "label", label: "학기", type: "text", ph: "2026-1학기" }, { k: "months", label: "운영 개월 수", type: "number", step: "0.5", ph: "3" }]);
+  }
+
+  function renderResults() {
+    var res = compute();
+    renderCalcCells(res);
+    document.getElementById("sumAll").textContent = f4(res.total);
+    document.getElementById("sumCommon").textContent = f4(res.common);
+    document.getElementById("sumSelect").textContent = f4(res.select);
+    document.getElementById("sumCap").textContent = "선택가산점 상한 10점 · 공통가산점은 항목별 상한";
+
+    var mh = "";
+    Object.keys(GROUPS).forEach(function (g) {
+      var gr = res.groups[g];
+      if (g === "common") return;
+      var pct = gr.cap ? Math.min(100, gr.val / gr.cap * 100) : 0;
+      var full = gr.cap && gr.val >= gr.cap - 1e-9 && gr.val > 0;
+      mh += '<div class="meter' + (full ? " full" : "") + '"><div class="top"><span>' + esc(GROUPS[g].name) + '</span><span class="val">' + f4(gr.val) + " / " + gr.cap.toFixed(2) + "</span></div>" +
+        '<div class="bar"><i style="width:' + pct.toFixed(1) + '%"></i></div>' +
+        (gr.raw > gr.val + 1e-9 ? '<div class="lost">상한 초과로 ' + f4(gr.raw - gr.val) + "점 미반영</div>" : "") + "</div>";
+    });
+    document.getElementById("meters").innerHTML = mh;
+
+    document.getElementById("warns").innerHTML = res.warns.map(function (w) { return '<div class="warn">' + esc(w) + "</div>"; }).join("");
+
+    var th = "<thead><tr><th>항목</th><th>근거</th><th style=\"text-align:right\">계산</th><th style=\"text-align:right\">상한</th><th style=\"text-align:right\">인정</th></tr></thead><tbody>";
+    var any = false;
+    Object.keys(GROUPS).forEach(function (g) {
+      var gr = res.groups[g];
+      if (!gr.items.length) return;
+      any = true;
+      th += '<tr class="grp"><td colspan="2">' + esc(GROUPS[g].name) + '</td><td class="n">' + f4(gr.raw) + '</td><td class="n">' + (gr.cap == null ? "–" : gr.cap.toFixed(2)) + '</td><td class="n">' + f4(gr.val) + "</td></tr>";
+      gr.items.forEach(function (k) {
+        var r = res.items[k];
+        th += "<tr><td>" + esc(ITEMS[k].name) + "</td><td>" + esc(r.lines.join(" · ")) + '</td><td class="n">' + f4(r.raw) + '</td><td class="n">' + r.cap.toFixed(2) + '</td><td class="n' + (r.raw > r.val + 1e-9 ? " cut" : "") + '">' + f4(r.val) + "</td></tr>";
+      });
+    });
+    if (!any) th += '<tr><td colspan="5">아직 계산된 항목이 없습니다.</td></tr>';
+    th += "</tbody>";
+    document.getElementById("detail").innerHTML = th;
+
+    var parts = ["career", "perf", "training"].map(function (k) { return parseFloat(state[k]); });
+    var filled = parts.filter(function (x) { return isFinite(x); });
+    document.getElementById("overallSum").textContent = filled.length
+      ? (filled.reduce(function (a, b) { return a + b; }, 0) + res.total).toFixed(4) + (filled.length < 3 ? " (일부 입력)" : "")
+      : "–";
+    document.getElementById("backup").value = JSON.stringify(state);
+    save();
+  }
+
+  /* ---------- 이벤트 ---------- */
+  function touch() { if (state.sample) { state.sample = false; document.getElementById("sampleBanner").hidden = true; } }
+  document.getElementById("baseDate").addEventListener("change", function (e) { state.baseDate = e.target.value; renderResults(); });
+  document.querySelectorAll("[data-k]").forEach(function (el) {
+    el.addEventListener("input", function () { state[el.dataset.k] = el.value; touch(); renderResults(); });
+  });
+  periodsEl.addEventListener("input", onPeriodEdit);
+  periodsEl.addEventListener("change", onPeriodEdit);
+  function onPeriodEdit(e) {
+    var row = e.target.closest(".prow"); if (!row) return;
+    var p = state.periods.find(function (x) { return x.id === row.dataset.id; }); if (!p) return;
+    var f = e.target.dataset.f; if (!f) return;
+    p[f] = e.target.value; touch();
+    if (f === "item") {
+      var it = ITEMS[p.item]; p.grade = it.grades ? it.grades[0] : "";
+      if (e.type === "change") { renderPeriods(); }
+    }
+    renderResults();
+  }
+  periodsEl.addEventListener("click", function (e) {
+    if (!e.target.closest("[data-del]")) return;
+    var id = e.target.closest(".prow").dataset.id;
+    state.periods = state.periods.filter(function (x) { return x.id !== id; });
+    touch(); renderPeriods(); renderResults();
+  });
+  function lastEnd() {
+    var ends = state.periods.map(function (p) { return parse(p.to); }).filter(function (x) { return x != null; });
+    if (!ends.length) return "";
+    var d = new Date(Math.max.apply(null, ends) + DAY);
+    return d.toISOString().slice(0, 10);
+  }
+  function addPeriod(item, grade, note) {
+    state.periods.push({ id: nid(), item: item, grade: grade, from: lastEnd(), to: "", note: note || "" });
+    touch(); renderPeriods(); renderResults();
+    var rows = periodsEl.querySelectorAll(".prow");
+    var f = rows[rows.length - 1].querySelector('[data-f="from"]');
+    if (f) f.focus();
+  }
+  document.getElementById("addPeriod").addEventListener("click", function () { addPeriod("head", "", ""); });
+
+  var dl = document.getElementById("schoolList");
+  dl.innerHTML = Object.keys(SCHOOLS).map(function (n) { return '<option value="' + esc(n) + '"></option>'; }).join("");
+  var sInput = document.getElementById("schoolSearch"), sHint = document.getElementById("schoolHint");
+  var defaultHint = sHint.textContent;
+  sInput.addEventListener("input", function () {
+    var hit = SCHOOLS[sInput.value.trim()];
+    sHint.textContent = hit ? sInput.value.trim() + " → " + ITEMS[hit.item].name + " " + hit.grade + "구역" : defaultHint;
+  });
+  document.getElementById("addFromSchool").addEventListener("click", function () {
+    var name = sInput.value.trim(), hit = SCHOOLS[name];
+    if (!name) { sHint.textContent = "학교명을 입력하세요."; return; }
+    if (!hit) { sHint.textContent = "‘" + name + "’은 도서·벽지나 특수지역 지정 목록에 없습니다. 농어촌·연구학교 등은 ‘경력 추가’로 직접 항목을 고르세요."; return; }
+    addPeriod(hit.item, hit.grade, name);
+    sInput.value = ""; sHint.textContent = name + " 경력을 추가했습니다. 시작일과 종료일을 입력하세요.";
+  });
+
+  function miniHandlers(elId, key, make) {
+    var el = document.getElementById(elId);
+    el.addEventListener("input", function (e) {
+      var row = e.target.closest(".mini-row"); if (!row) return;
+      var c = state[key].find(function (x) { return x.id === row.dataset.id; }); if (!c) return;
+      c[e.target.dataset.f] = e.target.value; touch(); renderResults();
+    });
+    el.addEventListener("click", function (e) {
+      if (!e.target.closest("[data-del]")) return;
+      var id = e.target.closest(".mini-row").dataset.id;
+      state[key] = state[key].filter(function (x) { return x.id !== id; });
+      touch(); renderStatic(); renderResults();
+    });
+    return function () { state[key].push(make()); touch(); renderStatic(); renderResults(); };
+  }
+  document.getElementById("addCredit").addEventListener("click", miniHandlers("credits", "credits", function () {
+    var ys = state.credits.map(function (c) { return parseInt(c.year, 10); }).filter(isFinite);
+    return { id: nid(), year: ys.length ? String(Math.max.apply(null, ys) + 1) : "", credits: "" };
+  }));
+  document.getElementById("addSemester").addEventListener("click", miniHandlers("semesters", "semesters", function () { return { id: nid(), label: "", months: "" }; }));
+
+  document.getElementById("clearSample").addEventListener("click", function () {
+    var bd = state.baseDate; state = blank(); state.baseDate = bd; renderStatic(); renderResults();
+  });
+  var toast = document.getElementById("toast");
+  function say(t) { toast.textContent = t; }
+  document.getElementById("copyBackup").addEventListener("click", function () {
+    var ta = document.getElementById("backup"), txt = ta.value;
+    function fallback() { ta.focus(); ta.select(); say("자동 복사가 막혀 있어 코드를 선택해 두었습니다. 직접 복사하세요."); }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(function () { say("백업 코드를 복사했습니다."); }, fallback);
+    } else fallback();
+  });
+  document.getElementById("loadBackup").addEventListener("click", function () {
+    try {
+      var obj = JSON.parse(document.getElementById("backup").value);
+      if (!obj || !Array.isArray(obj.periods)) throw new Error();
+      state = Object.assign(blank(), obj); state.sample = false;
+      renderStatic(); renderResults(); say("백업 코드를 불러왔습니다.");
+    } catch (e) { say("백업 코드 형식이 올바르지 않습니다. 복사한 코드 전체를 붙여넣었는지 확인하세요."); }
+  });
+  var resetArmed = false;
+  document.getElementById("resetAll").addEventListener("click", function (e) {
+    if (!resetArmed) { resetArmed = true; e.target.textContent = "한 번 더 누르면 모두 지웁니다"; setTimeout(function () { resetArmed = false; e.target.textContent = "전체 초기화"; }, 4000); return; }
+    resetArmed = false; e.target.textContent = "전체 초기화";
+    state = blank(); renderStatic(); renderResults(); say("모든 입력을 지웠습니다.");
+  });
+
+  renderStatic();
+  renderResults();
+
+  // 테스트용 노출
+  window.__promo = { span: span, compute: compute, getState: function () { return state; } };
+})();
+</script>
+</body>
+</html>
