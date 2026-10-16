@@ -150,6 +150,10 @@ tr.grp td { background: var(--accent-soft); font-weight: 500; }
 .rules-form fieldset { border: 1px solid var(--line); border-radius: 4px; padding: 10px 12px; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; min-width: 0; }
 .rules-form legend { font-size: 13px; font-weight: 500; padding: 0 4px; }
 details summary small { font-weight: 400; }
+.file-btn { display: inline-flex; align-items: center; cursor: pointer; font-size: 15px; color: var(--ink); border: 1px solid var(--line); border-radius: 4px; padding: 7px 12px; background: var(--surface); }
+.file-btn input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.file-btn:focus-within { outline: 2px solid var(--accent); outline-offset: 1px; }
+.toast.err { color: var(--over); }
 details summary { cursor: pointer; font-weight: 500; }
 details[open] summary { margin-bottom: 8px; }
 .rules { font-size: 13px; color: var(--muted); display: grid; gap: 6px; margin: 0; padding-left: 18px; }
@@ -174,6 +178,30 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
 
   <div class="layout">
     <main>
+      <section class="card" id="sec-file">
+        <h2>내 점수 파일 <small>CSV로 저장해 두고 다음에 불러와 이어서 관리</small></h2>
+        <div class="row-actions">
+          <button type="button" id="saveCsv" class="primary">CSV로 저장</button>
+          <label class="file-btn" for="csvFile">CSV 불러오기
+            <input type="file" id="csvFile" accept=".csv,text/csv">
+          </label>
+          <button type="button" id="resetAll" class="ghost">전체 초기화</button>
+        </div>
+        <div class="toast" id="toast" role="status"></div>
+        <p class="note">저장한 CSV는 엑셀에서 열어 확인·수정할 수 있습니다. 입력 내용은 이 브라우저에도 자동 저장되지만, 브라우저 데이터를 지우거나 다른 기기에서 열면 사라지니 CSV로 보관하세요.</p>
+        <details>
+          <summary>파일 저장이 안 될 때 (백업 코드)</summary>
+          <div style="display:grid;gap:10px;margin-top:8px">
+            <p class="note">CSV 내용을 그대로 복사하거나 붙여넣을 수 있습니다. 붙여넣은 뒤 ‘붙여넣은 내용 불러오기’를 누르세요.</p>
+            <textarea id="backup" aria-label="CSV 내용"></textarea>
+            <div class="row-actions">
+              <button type="button" id="copyBackup">CSV 내용 복사</button>
+              <button type="button" id="loadBackup">붙여넣은 내용 불러오기</button>
+            </div>
+          </div>
+        </details>
+      </section>
+
       <section class="card">
         <h2>평정 기준</h2>
         <div class="toolbar">
@@ -331,21 +359,6 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
         </details>
       </section>
 
-      <section class="card">
-        <details>
-          <summary>입력 내용 백업·불러오기</summary>
-          <div style="display:grid;gap:10px">
-            <p class="note">다른 기기로 옮기거나 보관하려면 백업 코드를 복사해 두세요. 불러올 때는 아래 칸에 붙여넣고 ‘불러오기’를 누르세요.</p>
-            <textarea id="backup" aria-label="백업 코드"></textarea>
-            <div class="row-actions">
-              <button type="button" id="copyBackup">백업 코드 복사</button>
-              <button type="button" id="loadBackup">불러오기</button>
-              <button type="button" id="resetAll" class="ghost">전체 초기화</button>
-            </div>
-            <div class="toast" id="toast" role="status"></div>
-          </div>
-        </details>
-      </section>
 
       <section class="card">
         <details>
@@ -984,7 +997,8 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
       return '<div class="meter' + (full ? " full" : "") + '"><div class="top"><span>' + m[0] + '</span><span class="val">' + m[1].toFixed(3) + (m[2] ? " / " + m[2] : "") + "</span></div>" +
         (m[2] ? '<div class="bar"><i style="width:' + pct.toFixed(1) + '%"></i></div>' : "") + "</div>";
     }).join("");
-    document.getElementById("backup").value = JSON.stringify(state);
+    var ta = document.getElementById("backup");
+    if (document.activeElement !== ta) ta.value = toCsv();
     save();
   }
 
@@ -1088,21 +1102,168 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
     var bd = state.baseDate; state = blank(); state.baseDate = bd; renderStatic(); renderResults();
   });
   var toast = document.getElementById("toast");
-  function say(t) { toast.textContent = t; }
+  function say(t, isErr) { toast.textContent = t; toast.className = "toast" + (isErr ? " err" : ""); }
+
+  /* ---------- CSV 저장·불러오기 ---------- */
+  var CSV_HEAD = ["구분", "값1", "값2", "값3", "값4", "값5", "설명"];
+  var SCALARS = [
+    ["qualScore", "자격연수 성적"], ["qualFull", "자격연수 성적 만점"],
+    ["violence", "학교폭력 예방·대응 실적 (연수)"], ["prac26", "교육실습 2주 이상 6주 미만 (회)"], ["prac68", "교육실습 6주 이상 8주 이하 (회)"],
+    ["award1", "수업연구 발표대회 1등급 (회)"], ["award2", "수업연구 발표대회 2등급 (회)"], ["award3", "수업연구 발표대회 3등급 (회)"],
+    ["cert", "국가기술 자격증 등급 (A/B)"], ["youth", "청소년봉사단 지도교사 (연수)"]
+  ];
+  var DEG_LABEL = { maJ: "석사 · 직무관련", maO: "석사 · 기타", phdJ: "박사 · 직무관련", phdO: "박사 · 기타" };
+  var RULE_LABEL = {};
+  RULE_FORM.forEach(function (g) { g.keys.forEach(function (k) { RULE_LABEL[k[0]] = g.legend + " · " + k[1]; }); });
+
+  function csvCell(v) {
+    var s = v == null ? "" : String(v);
+    return /[",\r\n]/.test(s) || /^\s|\s$/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }
+  function toCsv() {
+    var rows = [CSV_HEAD];
+    function add(kind, vals, desc) {
+      var r = [kind]; for (var i = 0; i < 5; i++) r.push(vals[i] == null ? "" : vals[i]);
+      r.push(desc || ""); rows.push(r);
+    }
+    // 읽기용 결과 요약 (불러올 때는 무시)
+    var res = compute(), cr = computeCareer(), pf = computePerf(), tr = computeTraining();
+    add("결과", [(cr.total + pf.total + tr.total + res.total).toFixed(3)], "승진 평정 총점 (불러올 때 무시)");
+    add("결과", [cr.total.toFixed(3)], "경력평정점");
+    add("결과", [pf.total.toFixed(3)], "근무성적평정점");
+    add("결과", [tr.total.toFixed(3)], "연수성적평정점");
+    add("결과", [f4(res.total), f4(res.common), f4(res.select)], "가산점 합계 / 공통 / 선택");
+    add("평정기준일", [state.baseDate], "학년도 종료일");
+    state.careers.forEach(function (c) { add("경력평정", [c.grade, c.from, c.to, c.note], "등급 / 시작일 / 종료일 / 메모"); });
+    state.perfs.forEach(function (p) { add("근무성적", [p.year, p.score], "평정 연도 / 합산점"); });
+    state.jobs.forEach(function (j) { add("직무연수", [j.name, j.year, j.score], "연수명 / 이수 연도 / 성적"); });
+    state.contests.forEach(function (c) { add("연구대회", [c.year, c.level, c.rank], "입상 연도 / 규모(전국·시도) / 등급"); });
+    state.degrees.forEach(function (d) { add("학위", [d.type, d.note], DEG_LABEL[d.type] || ""); });
+    state.periods.forEach(function (p) { add("가산점경력", [p.item, p.grade, p.from, p.to, p.note], ITEMS[p.item] ? ITEMS[p.item].name : ""); });
+    state.credits.forEach(function (c) { add("직무연수학점", [c.year, c.credits], "학년도 / 이수 학점"); });
+    state.semesters.forEach(function (s) { add("실습학기제", [s.label, s.months], "학기 / 운영 개월 수"); });
+    SCALARS.forEach(function (s) { if (state[s[0]] !== "" && state[s[0]] != null) add("단일값", [s[0], state[s[0]]], s[1]); });
+    Object.keys(state.rules || {}).forEach(function (k) {
+      if (state.rules[k] !== "" && RULE_DEFAULTS[k] != null) add("기준값", [k, state.rules[k]], RULE_LABEL[k] || "");
+    });
+    return rows.map(function (r) { return r.map(csvCell).join(","); }).join("\r\n") + "\r\n";
+  }
+  function parseCsv(text) {
+    text = text.replace(/^﻿/, "");
+    var rows = [], row = [], cell = "", q = false;
+    for (var i = 0; i < text.length; i++) {
+      var ch = text[i];
+      if (q) {
+        if (ch === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; }
+        else cell += ch;
+      } else if (ch === '"') q = true;
+      else if (ch === ",") { row.push(cell); cell = ""; }
+      else if (ch === "\n" || ch === "\r") {
+        if (ch === "\r" && text[i + 1] === "\n") i++;
+        row.push(cell); rows.push(row); row = []; cell = "";
+      } else cell += ch;
+    }
+    if (cell !== "" || row.length) { row.push(cell); rows.push(row); }
+    return rows;
+  }
+  function fromCsv(text) {
+    var rows = parseCsv(text), s = blank(), known = 0, skipped = 0;
+    var scalarKeys = {}; SCALARS.forEach(function (x) { scalarKeys[x[0]] = true; });
+    rows.forEach(function (r, idx) {
+      var kind = (r[0] || "").trim(), v = r.slice(1, 6).map(function (x) { return (x || "").trim(); });
+      if (!kind || (idx === 0 && kind === "구분")) return;
+      known++;
+      switch (kind) {
+        case "결과": break;
+        case "평정기준일": s.baseDate = v[0]; break;
+        case "경력평정": s.careers.push({ id: nid(), grade: GRADE_KEY[v[0]] ? v[0] : "가", from: v[1], to: v[2], note: v[3] }); break;
+        case "근무성적": s.perfs.push({ id: nid(), year: v[0], score: v[1] }); break;
+        case "직무연수": s.jobs.push({ id: nid(), name: v[0], year: v[1], score: v[2] }); break;
+        case "연구대회": s.contests.push({ id: nid(), year: v[0], level: v[1] === "전국" ? "전국" : "시도", rank: /^[123]$/.test(v[2]) ? v[2] : "3" }); break;
+        case "학위": s.degrees.push({ id: nid(), type: DEG_LABEL[v[0]] ? v[0] : "maJ", note: v[1] }); break;
+        case "가산점경력":
+          if (!ITEMS[v[0]] || ITEMS[v[0]].count) { skipped++; break; }
+          s.periods.push({ id: nid(), item: v[0], grade: ITEMS[v[0]].grades ? (ITEMS[v[0]].grades.indexOf(v[1]) >= 0 ? v[1] : ITEMS[v[0]].grades[0]) : "", from: v[2], to: v[3], note: v[4] });
+          break;
+        case "직무연수학점": s.credits.push({ id: nid(), year: v[0], credits: v[1] }); break;
+        case "실습학기제": s.semesters.push({ id: nid(), label: v[0], months: v[1] }); break;
+        case "단일값": if (scalarKeys[v[0]]) s[v[0]] = v[1]; else skipped++; break;
+        case "기준값": if (RULE_DEFAULTS[v[0]] != null) s.rules[v[0]] = v[1]; else skipped++; break;
+        default: known--; skipped++;
+      }
+    });
+    if (!known) throw new Error("empty");
+    return { state: s, skipped: skipped };
+  }
+  function applyLoaded(text, source) {
+    try {
+      var out = fromCsv(text);
+      state = out.state;
+      renderStatic(); renderResults();
+      say(source + "을 불러왔습니다." + (out.skipped ? " 알아볼 수 없는 " + out.skipped + "줄은 건너뛰었습니다." : ""));
+    } catch (e) {
+      say("이 계산기에서 저장한 CSV 형식이 아닙니다. ‘CSV로 저장’으로 만든 파일인지 확인하세요.", true);
+    }
+  }
+  function today() {
+    var d = new Date(), p = function (n) { return (n < 10 ? "0" : "") + n; };
+    return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate());
+  }
+  document.getElementById("saveCsv").addEventListener("click", function () {
+    var name = "승진평정_" + today() + ".csv", data = "﻿" + toCsv();
+    function plainDownload() {
+      var url = URL.createObjectURL(new Blob([data], { type: "text/csv;charset=utf-8" }));
+      var a = document.createElement("a");
+      a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+      say(name + " 파일로 저장했습니다.");
+    }
+    var c = window.claude;
+    if (!c || typeof c.use !== "function") { plainDownload(); return; }
+    // claude.ai에서 열었을 때: 저장 확인 창을 거쳐 저장
+    c.use("downloads").then(function (dl) {
+      if (!dl) { say("이 화면에서는 파일 저장을 쓸 수 없습니다. 아래 ‘파일 저장이 안 될 때’에서 CSV 내용을 복사하세요.", true); return; }
+      return dl.save({ filename: name, data: data }).then(function () { say(name + " 파일로 저장했습니다."); }, function (err) {
+        var code = err && err.code;
+        if (code === "declined") say("저장을 취소했습니다.");
+        else if (code === "rate_limited") say("저장 확인 창이 이미 열려 있습니다. 잠시 뒤 다시 누르세요.", true);
+        else say("이 화면에서는 파일 저장을 쓸 수 없습니다. 아래 ‘파일 저장이 안 될 때’에서 CSV 내용을 복사하세요.", true);
+      });
+    }, function () { say("파일 저장을 시작하지 못했습니다. 아래 ‘파일 저장이 안 될 때’에서 CSV 내용을 복사하세요.", true); });
+  });
+  document.getElementById("csvFile").addEventListener("change", function (e) {
+    var f = e.target.files && e.target.files[0];
+    if (!f) return;
+    var rd = new FileReader();
+    rd.onload = function () {
+      var buf = new Uint8Array(rd.result), text;
+      try { text = new TextDecoder("utf-8", { fatal: true }).decode(buf); }
+      catch (err) {
+        // 엑셀에서 다시 저장해 CP949(EUC-KR)가 된 파일
+        try { text = new TextDecoder("euc-kr").decode(buf); } catch (err2) { text = ""; }
+      }
+      applyLoaded(text, "‘" + f.name + "’ 파일");
+      e.target.value = "";
+    };
+    rd.onerror = function () { say("파일을 읽지 못했습니다. 다시 선택하세요.", true); };
+    rd.readAsArrayBuffer(f);
+  });
   document.getElementById("copyBackup").addEventListener("click", function () {
     var ta = document.getElementById("backup"), txt = ta.value;
-    function fallback() { ta.focus(); ta.select(); say("자동 복사가 막혀 있어 코드를 선택해 두었습니다. 직접 복사하세요."); }
+    function fallback() { ta.focus(); ta.select(); say("자동 복사가 막혀 있어 내용을 선택해 두었습니다. 직접 복사하세요."); }
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(txt).then(function () { say("백업 코드를 복사했습니다."); }, fallback);
+      navigator.clipboard.writeText(txt).then(function () { say("CSV 내용을 복사했습니다."); }, fallback);
     } else fallback();
   });
   document.getElementById("loadBackup").addEventListener("click", function () {
-    try {
-      var obj = JSON.parse(document.getElementById("backup").value);
-      if (!obj || !Array.isArray(obj.periods)) throw new Error();
-      state = Object.assign(blank(), obj); state.sample = false;
-      renderStatic(); renderResults(); say("백업 코드를 불러왔습니다.");
-    } catch (e) { say("백업 코드 형식이 올바르지 않습니다. 복사한 코드 전체를 붙여넣었는지 확인하세요."); }
+    var txt = document.getElementById("backup").value.trim();
+    // 예전 백업 코드(JSON)도 받아줌
+    if (txt.charAt(0) === "{") {
+      try { state = Object.assign(blank(), JSON.parse(txt)); state.sample = false; renderStatic(); renderResults(); say("백업 코드를 불러왔습니다."); }
+      catch (e) { say("붙여넣은 내용을 읽지 못했습니다. 전체를 붙여넣었는지 확인하세요.", true); }
+      return;
+    }
+    applyLoaded(txt, "붙여넣은 내용");
   });
   var resetArmed = false;
   document.getElementById("resetAll").addEventListener("click", function (e) {
