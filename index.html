@@ -1842,6 +1842,94 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
   }
   RULESETS["sejong:mid"] = sejongRules("mid");
   RULESETS["sejong:ele"] = sejongRules("ele");
+  /* 광주: 광주광역시교육청 공고 제2025-221호 「교육공무원승진규정 제41조 가산점 평정기준」 (14차 개정, 2026. 3. 1. 시행) — 중등·초등 공통 문서 */
+  function gwangjuRules(level) {
+    var ele = level === "ele";
+    var areaCap = ele ? 1.0 : 0.5;  // 제3조제1항제3호 가·나목: 유·초등 1.0, 중등 0.5 합산 상한
+    var items = {
+      head: { g: "gHead", name: "보직교사 경력 (1급 정교사·전문상담·보건)", cap: 1.75, periods: [{ m: 0.021, d: 0.0007 }] },
+      supervisor: { g: "gHead", name: "교육전문직원 경력", cap: 1.0, periods: [{ m: 0.0168, d: 0.0005 }] },
+      islandGJ: { g: "gArea", name: "도서·벽지 근무경력 (1997.12.31.까지)", cap: areaCap, grades: ["가", "나", "다", "라"],
+        periods: [{ to: "1997-12-31", r: { "가": [0.042, 0.0014], "나": [0.034, 0.0011], "다": [0.025, 0.0008], "라": [0.017, 0.0005] } }] },
+      hansenGJ: { g: "gArea", name: "한센병 환자 자녀 학교·학급 담당 (1997.12.31.까지)", cap: areaCap, periods: [{ to: "1997-12-31", m: 0.021, d: 0.0007 }] },
+      ruralGJ: { g: "gArea", name: "교육감 지정 농촌학교 근무경력 (2002.1.1.~)", cap: areaCap, periods: ele ? [
+        { from: "2002-01-01", to: "2011-12-31", label: "2002~2011", m: 0.010, d: 0.0003 },
+        { from: "2012-01-01", to: "2015-02-28", label: "2012.1.~2015.2.", m: 0.0075, d: 0.00025 },
+        { from: "2015-03-01", label: "2015.3.~ (유·초 상향)", m: 0.0095, d: 0.00032 }] : [
+        { from: "2002-01-01", to: "2011-12-31", label: "2002~2011", m: 0.010, d: 0.0003 },
+        { from: "2012-01-01", label: "2012.1.~", m: 0.0075, d: 0.00025 }] },
+      spedGJ: { g: "gSped", name: "특수학교 근무·특수학급 담당 (2002.12.31.까지)", cap: 1.0, grades: ["특수학교", "특수학급"],
+        periods: [{ to: "2002-12-31", r: { "특수학교": [0.021, 0.0007], "특수학급": [0.0105, 0.0003] } }] },
+      research2: { g: "gRes", name: "교육감 지정 연구학교 근무경력", cap: 1.0, periods: [{ m: 0.012, d: 0.0004 }] },
+      practiceSchool: { g: "gRes", name: "교육실습 대용학교 교육실습 담당교원", cap: 1.0, periods: [{ m: 0.015, d: 0.0005 }] },
+      practicumGJ: { g: "gRes", name: "교육실습생 지도 교원 (중등·유치원·초등특수·초등보건, 인정 월수만큼 입력)", cap: 1.0, periods: [{ m: 0.012, d: 0.0004 }] },
+      vpCertGJ: { g: "gVp", name: "교감·원감 자격 취득 후 교사 근무경력 (2026.3.1.~, 취득 다음 해 3.1.부터)", cap: 0.5,
+        periods: [ele ? { from: "2026-03-01", m: 0.02, d: 0.00067 } : { from: "2026-03-01", m: 0.0125, d: 0.00042 }] },
+      localGJ: { g: "gLocal", name: ele ? "광주 관내 교사 근무경력 (2026.3.1.~, 관내 10년 초과분만 입력)" : "광주 관내 교사 근무경력 (2026.3.1.~)", cap: 1.0,
+        periods: [ele ? { from: "2026-03-01", m: 0.01, d: 0.00033 } : { from: "2026-03-01", m: 0.0168, d: 0.0005 }] }
+    };
+    var groups = {
+      gHead: { name: ele ? "보직교사·교육전문직원 경력 (학교폭력 실적과 합산 2.0)" : "보직교사·교육전문직원·담임교사 경력 (학교폭력 실적과 합산 2.0)", cap: 1.75 },
+      gArea: { name: ele ? "도서·벽지·한센병·농촌·인사특구·소규모·학교규모별 근무경력" : "도서·벽지·한센병·농촌학교 근무경력, 보직교사 추가 경력", cap: areaCap },
+      gSped: { name: "특수학교·특수학급 근무경력 (2002년까지)", cap: 1.0 },
+      gRes: { name: "교육감 지정 연구학교·교육실습" + (ele ? "·한국어학급" : "") + " (공통 연구학교와 합산 1.0)", cap: 1.0 },
+      gVp: { name: "교감·원감 자격 취득 후 근무경력", cap: 0.5 },
+      gLocal: { name: "광주 관내 근무경력", cap: 1.0 }
+    };
+    if (ele) {
+      items.zoneGJ = { g: "gArea", name: "초등 인사특구학교 근무경력 (별표1, 2012.1.1.~)", cap: 0.48, periods: [
+        { from: "2012-01-01", to: "2015-02-28", label: "2012.1.~2015.2.", m: 0.003, d: 0.0001 },
+        { from: "2015-03-01", label: "2015.3.~", m: 0.005, d: 0.00017 }] };
+      items.smallGJ = { g: "gArea", name: "소규모 초등학교 근무경력 (2029.2.까지 12학급 이하, 2029.3.~ 8학급 이하)", cap: 1.0, periods: [
+        { from: "2012-01-01", to: "2015-02-28", label: "2012.1.~2015.2.", m: 0.003, d: 0.0001 },
+        { from: "2015-03-01", label: "2015.3.~", m: 0.005, d: 0.00017 }] };
+      items.sizeGJ = { g: "gArea", name: "학교규모별 유·초등 근무경력 (제16호, 학급수 구간 선택)", cap: 1.0,
+        grades: ["가목 (월 0.004)", "나목 (월 0.0035)", "다목 (월 0.003)", "그 밖의 학교 (월 0.002)", "라목 대규모 교감·원감 (월 0.01)"],
+        periods: [
+          { from: "2015-03-01", label: "2015.3.~", r: { "그 밖의 학교 (월 0.002)": [0.002, 0.000067] } },
+          { from: "2016-03-01", label: "2016.3.~", r: { "가목 (월 0.004)": [0.004, 0.00013], "나목 (월 0.0035)": [0.0035, 0.00012], "다목 (월 0.003)": [0.003, 0.0001] } },
+          { from: "2029-03-01", label: "2029.3.~", r: { "라목 대규모 교감·원감 (월 0.01)": [0.01, 0.00033] } }] };
+      items.koreanGJ = { g: "gRes", name: "한국어학급 운영 학교 근무 (농촌·인사특구 제외)", cap: 1.0, periods: [{ from: "2021-03-01", m: 0.003, d: 0.0001 }] };
+      items.headExtraGJ = { g: "gHeadExtra", name: "보직교사 추가 경력 (보직·학교폭력 합산 2.0 취득 후, 2023.3.1.~)", cap: 0.5, periods: [{ from: "2023-03-01", m: 0.01, d: 0.00033 }] };
+      groups.gHeadExtra = { name: "보직교사 추가 경력·전국소년체전 메달 (합산 0.6, 2028.3.1. 평정부터 나목 0.4 추가)", cap: 0.6 };
+    } else {
+      items.homeroom = { g: "gHead", name: "중등 담임교사 경력 (2012.3.1.~)", cap: 0.75, periods: [{ from: "2012-03-01", m: 0.003, d: 0.0001 }] };
+      items.headExtraGJ = { g: "gArea", name: "보직교사 추가 경력 (보직·담임·학교폭력 합산 2.0 취득 후, 2023.3.1.~)", cap: 0.5, periods: [{ from: "2023-03-01", m: 0.005, d: 0.00017 }] };
+    }
+    var rs = ["research", "research2", "practiceSchool", "practicumGJ"].concat(ele ? ["koreanGJ"] : []), pairs = [];
+    for (var i = 0; i < rs.length; i++) for (var j = i + 1; j < rs.length; j++) pairs.push(rs[i] + "|" + rs[j]);
+    pairs = pairs.concat(["head|hansenGJ", "supervisor|islandGJ", "supervisor|ruralGJ", "islandGJ|hansenGJ", "islandGJ|spedGJ",
+      "ruralGJ|spedGJ", "hansenGJ|spedGJ"]).concat(ele ? [] : ["head|homeroom", "ruralGJ|headExtraGJ"]);
+    return {
+      ready: true, source: "광주광역시교육청 공고 제2025-221호 「교육공무원승진규정 제41조 가산점 평정기준」 일부 개정 (2025. 8. 25. 공고, 2026. 3. 1. 시행)",
+      notice: "2026. 7. 1. 광주·전남 교육청이 전남광주통합특별시교육청으로 통합되었습니다. 이 규칙은 옛 광주광역시교육청(광주 관할) 기준이며, 통합 교육청 규정이 새로 나오면 바뀔 수 있습니다. " +
+        (ele ? "전국소년체육대회 메달 지도(금 0.10·은 0.05·동 0.025, 연 1개, 지도교원 2인 7할·3인 이상 5할, 상한 0.55)는 ‘직접 입력 가산점’으로 ‘보직교사 추가 경력’ 그룹에 넣으세요. " +
+          "인사특구학교(별표1: 비아·송우·송정동·송정서·송정중앙·송정·어등·월곡·하남중앙·도산초, 대촌중앙초는 2029. 3. 1.부터) 0.48점 초과 기간은 소규모·학교규모별 항목으로 따로 입력하세요. 2004. 3.~2011. 12. 인사특구 경력(7차 규정)은 반영하지 않았습니다. " +
+          "학교규모별 구간은 2029. 2. 28.까지 근무경력은 가목 13~18학급·나목 19~20학급·다목 25학급 이상, 2029. 3. 1. 이후는 가목 9~13학급·나목 14~20학급·다목 21학급 이상(매년 4. 1. 일반학급수 기준)이고, 라목(10학급 이상 단설유치원 원감·36학급 이상 초등 교감)은 2029. 3. 1.부터입니다. 2028. 3. 1.~2029. 2. 28. 경력은 종전 기준으로 보았습니다. " +
+          "관내 근무경력은 관내 10년을 넘긴 뒤의 기간만 입력하세요. 보직교사 추가 경력 나목(0.4)은 2028. 3. 1. 평정부터 같은 항목에 이어 계산합니다. "
+          : "보직교사 추가 경력은 농촌학교 경력과 같은 기간이면 하나만 인정합니다. ") +
+        "광주학생교육원·본량학생야영장 도서·벽지 경력(2001. 12. 31.까지), 휴직·파견 기간 제외(관내 3호 파견 포함), 2008년까지 직무연수 연 4학점(0.4점) 상한 등 경과 규정은 반영하지 않았습니다.",
+      selectCap: 10,
+      commonCaps: { creditsYear: 0.12 },
+      groups: groups, items: items,
+      schools: ele ? [["zoneGJ", "", "비아초,송우초,송정동초,송정서초,송정중앙초,송정초,어등초,월곡초,하남중앙초,도산초"]] : [],
+      pairs: pairs,
+      itemCap: function (k, base) {
+        if (ele && k === "headExtraGJ" && base != null && base >= parse("2028-03-01")) return 0.9;
+        return null;
+      },
+      groupCap: function (g, base, res) {
+        // 교육감 지정 연구학교·교육실습·한국어학급은 교육부 지정 연구학교(공통)와 합산 1.0
+        if (g === "gRes") return Math.max(0, 1.0 - (res.items.research ? res.items.research.val : 0));
+        // 보직·전문직(·중등 담임) 1.75, 학교폭력 실적과 합산 2.0
+        if (g === "gHead") return Math.max(0, Math.min(1.75, 2.0 - (res.items.violence ? res.items.violence.val : 0)));
+        if (g === "gHeadExtra" && base != null && base >= parse("2028-03-01")) return 1.0;
+        return null;
+      }
+    };
+  }
+  RULESETS["gwangju:mid"] = gwangjuRules("mid");
+  RULESETS["gwangju:ele"] = gwangjuRules("ele");
   // 전남·광주는 2026. 7. 1. 전남광주통합특별시교육청으로 통합. 가산점 규정이 하나로 정비되기 전까지 옛 관할구역별로 둔다.
   // 시·도와 학교급. RULESETS에 없는 조합은 선택가산점 없이 경력·근평·연수·공통가산점만 계산
   var REGIONS = [["seoul", "서울"], ["busan", "부산"], ["daegu", "대구"], ["incheon", "인천"], ["daejeon", "대전"],
