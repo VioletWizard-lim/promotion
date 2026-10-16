@@ -1186,7 +1186,7 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
     }
     return {
       ready: true, source: "전라남도교육청 「2026 승진후보자 평정업무 처리요령(" + (ele ? "유·초등" : "중등") + ")」, 가산점산정규정(훈령 제253호)",
-      notice: "도서·벽지·농어촌 학교와 급지는 처리요령의 ‘2025. 지정 일람’에서 확인해 고르세요. 좋은수업 실천연구(교내 0.06·권역 0.08), 학교교육력 증진 유공(연 0.036), " +
+      notice: "2026. 7. 1. 전남광주통합특별시교육청으로 통합되었습니다. 통합 전 전라남도교육청 규정이며, 통합 교육청의 새 규정이 나오면 바뀔 수 있습니다. 도서·벽지·농어촌 학교와 급지는 처리요령의 ‘2025. 지정 일람’에서 확인해 고르세요. 좋은수업 실천연구(교내 0.06·권역 0.08), 학교교육력 증진 유공(연 0.036), " +
         (ele ? "전국대회 입상 지도·학급경영 우수교사 등" : "도서·벽지 대체 입상 실적") + "은 ‘직접 입력 가산점’으로 넣으세요. 농어촌 추가경력점(월 0.002, 기본 0.85 도달 후), 기타 교육활동 1개 목 0.5점 상한 등은 단순화했습니다.",
       commonCaps: { credits: 0.8 },
       selectCap: 9.5,
@@ -1268,10 +1268,11 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
     }
   };
 
+  // 전남·광주는 2026. 7. 1. 전남광주통합특별시교육청으로 통합. 가산점 규정이 하나로 정비되기 전까지 옛 관할구역별로 둔다.
   // 시·도와 학교급. RULESETS에 없는 조합은 선택가산점 없이 경력·근평·연수·공통가산점만 계산
-  var REGIONS = [["seoul", "서울"], ["busan", "부산"], ["daegu", "대구"], ["incheon", "인천"], ["gwangju", "광주"], ["daejeon", "대전"],
+  var REGIONS = [["seoul", "서울"], ["busan", "부산"], ["daegu", "대구"], ["incheon", "인천"], ["daejeon", "대전"],
     ["ulsan", "울산"], ["sejong", "세종"], ["gyeonggi", "경기"], ["gangwon", "강원"], ["chungbuk", "충북"], ["chungnam", "충남"],
-    ["jeonbuk", "전북"], ["jeonnam", "전남"], ["gyeongbuk", "경북"], ["gyeongnam", "경남"], ["jeju", "제주"]];
+    ["jeonbuk", "전북"], ["jeonnam", "전남광주 · 전남 관할"], ["gwangju", "전남광주 · 광주 관할"], ["gyeongbuk", "경북"], ["gyeongnam", "경남"], ["jeju", "제주"]];
   var LEVELS = [["mid", "중등"], ["ele", "초등"]];
   function nameOf(list, id) { for (var i = 0; i < list.length; i++) if (list[i][0] === id) return list[i][1]; return ""; }
 
