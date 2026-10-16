@@ -177,6 +177,9 @@ details summary small { font-weight: 400; }
 .file-btn input { position: absolute; width: 1px; height: 1px; opacity: 0; }
 .file-btn:focus-within { outline: 2px solid var(--accent); outline-offset: 1px; }
 .toast.err { color: var(--over); }
+.guide { font-size: 13px; background: var(--accent-soft); border-radius: 4px; padding: 10px 12px; display: grid; gap: 6px; }
+.guide ul { margin: 0; padding-left: 18px; display: grid; gap: 2px; }
+.guide p { margin: 0; color: var(--muted); }
 details summary { cursor: pointer; font-weight: 500; }
 details[open] summary { margin-bottom: 8px; }
 .rules { font-size: 13px; color: var(--muted); display: grid; gap: 6px; margin: 0; padding-left: 18px; }
@@ -248,7 +251,15 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
 
       <section class="card step" id="s2" data-kind="score">
         <h2><span class="no">2</span>병역사항 <small>→ 경력평정</small><span class="sec-pts" data-pts="s2"></span></h2>
-        <p class="note">군 복무 기간이 경력으로 인정되면 복무 기간을 입력하세요. 경력평정(16번 경력과 합산)에 들어갑니다. 경력 등급은 「교육공무원 승진규정」 별표 1과 호봉획정 내용을 확인하세요.</p>
+        <p class="note">교육공무원 임용 전 병역 의무로 복무한 기간을 입력하세요. 16번 경력과 합산해 경력평정을 계산합니다. 임용 뒤 휴직하고 복무한 기간이면 16번 경력에 이어서 넣으세요.</p>
+        <div class="guide" role="note">
+          <b>경력 등급 안내 (「교육공무원 승진규정」 별표 1, 평정대상자 직위: 교사)</b>
+          <ul>
+            <li><b>가경력</b> — 각급학교 교장·교감·교사 경력, 장학관·교육연구관·장학사·교육연구사 경력</li>
+            <li><b>나경력</b> — 임용권자가 임용해 전임으로 근무한 강사·기간제교원(임시교원 포함) 경력, 교육공무원 임용 전 병역 의무로 징집·소집·근무한 경력</li>
+          </ul>
+          <p>병역 경력의 기본 등급은 <b>나경력</b>입니다. 학교에서 받은 경력평정표와 다르면 등급을 고치고, 인정되지 않은 경력은 빼세요. 호봉획정(15번)에서 인정된 비율과 경력평정 인정 여부는 별개입니다.</p>
+        </div>
         <div class="mini-rows" id="careersMil"></div>
         <div class="row-actions"><button type="button" id="addCareerMil">복무 기간 추가</button></div>
       </section>
@@ -403,7 +414,7 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
         <div class="mini-rows" id="careers"></div>
         <div class="row-actions"><button type="button" id="addCareer">경력 추가</button></div>
         <div class="kv" id="careerOut"></div>
-        <p class="hint">가경력: 교사·교감·장학사·교육연구사 등 교육공무원 경력 대부분 · 나·다경력: 강사, 일부 기관 근무 등. 등급 구분은 「교육공무원 승진규정」 별표 1을 확인하세요. 병역(2번)·임용 전 경력(20번)도 합산됩니다.</p>
+        <p class="hint">정규 교사·교감·장학사·교육연구사 경력은 가경력입니다. 기간제·강사 경력과 병역은 나경력이며 2번·20번에서 따로 입력하면 합산됩니다 (별표 1, 평정대상자 직위: 교사).</p>
       </section>
 
       <section class="card step skip" id="s17" data-kind="none">
@@ -424,7 +435,15 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
 
       <section class="card step" id="s20" data-kind="score">
         <h2><span class="no">20</span>임용전 경력 <small>→ 경력평정</small><span class="sec-pts" data-pts="s20"></span></h2>
-        <p class="note">기간제 교사 등 경력으로 인정되는 임용 전 경력을 입력하세요. 16번 경력과 합산해 경력평정을 계산합니다.</p>
+        <p class="note">기간제교원·전임 강사 등 경력으로 인정되는 임용 전 경력을 입력하세요. 16번 경력과 합산해 경력평정을 계산합니다. 경력평정은 최근 20년만 보므로, 오래된 경력은 반영 기간이 0일 수 있습니다.</p>
+        <div class="guide" role="note">
+          <b>경력 등급 안내 (「교육공무원 승진규정」 별표 1, 평정대상자 직위: 교사)</b>
+          <ul>
+            <li><b>가경력</b> — 각급학교 교장·교감·교사 경력, 장학관·교육연구관·장학사·교육연구사 경력</li>
+            <li><b>나경력</b> — 임용권자가 임용해 전임으로 근무한 강사·기간제교원(임시교원 포함) 경력, 교육공무원 임용 전 병역 의무로 징집·소집·근무한 경력</li>
+          </ul>
+          <p>임용 전 경력의 기본 등급은 <b>나경력</b>입니다. 학교에서 받은 경력평정표와 다르면 등급을 고치고, 인정되지 않은 경력은 빼세요. 호봉획정(15번)에서 인정된 비율과 경력평정 인정 여부는 별개입니다.</p>
+        </div>
         <div class="mini-rows" id="careersPre"></div>
         <div class="row-actions"><button type="button" id="addCareerPre">임용 전 경력 추가</button></div>
       </section>
@@ -629,7 +648,7 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
     var s = blank();
     s.sample = true;
     s.careers = [
-      { id: nid(), src: "병역", grade: "가", from: "2008-04-01", to: "2010-01-31", note: "육군 병장 (예시)" },
+      { id: nid(), src: "병역", grade: "나", from: "2008-04-01", to: "2010-01-31", note: "육군 병장 (예시)" },
       { id: nid(), src: "경력", grade: "가", from: "2011-03-01", to: "", note: "중등 교사 (예시)" }];
     s.perfs = [["2022", "96.2"], ["2023", "97.5"], ["2024", "95.8"], ["2025", "98.1"], ["2026", "97.4"]].map(function (x) { return { id: nid(), year: x[0], score: x[1] }; });
     s.jobs = [["수업 디자인 직무연수 (예시)", "2023", "98.5"], ["학생 생활교육 직무연수 (예시)", "2024", "94"], ["AI 활용 교육 직무연수 (예시)", "2025", ""]].map(function (x) { return { id: nid(), name: x[0], year: x[1], score: x[2] }; });
@@ -1215,7 +1234,8 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
   function addCareerOf(src) {
     return function () {
       var ends = careersOf(src).map(function (c) { return parse(c.to); }).filter(function (x) { return x != null; });
-      return { id: nid(), src: src, grade: "가", from: ends.length ? new Date(Math.max.apply(null, ends) + DAY).toISOString().slice(0, 10) : "", to: "", note: "" };
+      // 별표 1: 교사 평정 시 병역·기간제·강사 경력은 나경력
+      return { id: nid(), src: src, grade: src === "경력" ? "가" : "나", from: ends.length ? new Date(Math.max.apply(null, ends) + DAY).toISOString().slice(0, 10) : "", to: "", note: "" };
     };
   }
   document.getElementById("addCareer").addEventListener("click", miniHandlers("careers", "careers", addCareerOf("경력")));
@@ -1315,7 +1335,10 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
       switch (kind) {
         case "결과": break;
         case "평정기준일": s.baseDate = v[0]; break;
-        case "경력평정": s.careers.push({ id: nid(), src: CAREER_SRC.indexOf(v[4]) >= 0 ? v[4] : "경력", grade: GRADE_KEY[v[0]] ? v[0] : "가", from: v[1], to: v[2], note: v[3] }); break;
+        case "경력평정":
+          var src = CAREER_SRC.indexOf(v[4]) >= 0 ? v[4] : "경력";
+          s.careers.push({ id: nid(), src: src, grade: GRADE_KEY[v[0]] ? v[0] : (src === "경력" ? "가" : "나"), from: v[1], to: v[2], note: v[3] });
+          break;
         case "근무성적": s.perfs.push({ id: nid(), year: v[0], score: v[1] }); break;
         case "직무연수": s.jobs.push({ id: nid(), name: v[0], year: v[1], score: v[2] }); break;
         case "연구대회": s.contests.push({ id: nid(), year: v[0], level: v[1] === "전국" ? "전국" : "시도", rank: /^[123]$/.test(v[2]) ? v[2] : "3" }); break;
