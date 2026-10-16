@@ -2143,9 +2143,7 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
   };
   // 전남·광주는 2026. 7. 1. 전남광주통합특별시교육청으로 통합. 가산점 규정이 하나로 정비되기 전까지 옛 관할구역별로 둔다.
   // 시·도와 학교급. RULESETS에 없는 조합은 선택가산점 없이 경력·근평·연수·공통가산점만 계산
-  var REGIONS = [["seoul", "서울"], ["busan", "부산"], ["daegu", "대구"], ["incheon", "인천"], ["daejeon", "대전"],
-    ["ulsan", "울산"], ["sejong", "세종"], ["gyeonggi", "경기"], ["gangwon", "강원"], ["chungbuk", "충북"], ["chungnam", "충남"],
-    ["jeonbuk", "전북"], ["jeonnam", "전남광주 · 전남 관할"], ["gwangju", "전남광주 · 광주 관할"], ["gyeongbuk", "경북"], ["gyeongnam", "경남"], ["jeju", "제주"]];
+  var REGIONS = [["gangwon", "강원"], ["gyeonggi", "경기"], ["gyeongnam", "경남"], ["gyeongbuk", "경북"], ["daegu", "대구"], ["daejeon", "대전"], ["busan", "부산"], ["seoul", "서울"], ["sejong", "세종"], ["ulsan", "울산"], ["incheon", "인천"], ["gwangju", "전남광주 · 광주 관할"], ["jeonnam", "전남광주 · 전남 관할"], ["jeonbuk", "전북"], ["jeju", "제주"], ["chungnam", "충남"], ["chungbuk", "충북"]];
   var LEVELS = [["mid", "중등"], ["ele", "초등"]];
   function nameOf(list, id) { for (var i = 0; i < list.length; i++) if (list[i][0] === id) return list[i][1]; return ""; }
 
