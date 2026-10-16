@@ -1129,6 +1129,52 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
   RULESETS["jeonnam:mid"] = jeonnamRules("mid");
   RULESETS["jeonnam:ele"] = jeonnamRules("ele");
 
+  /* 경북 중등: 경상북도교육청 학교지원종합자료실 「가산점 평정 세부 방법」(중등교육과) */
+  RULESETS["gyeongbuk:mid"] = {
+    ready: true, source: "경상북도교육청 학교지원종합자료실 「가산점 평정 세부 방법」 (중등교육과, 2026. 10. 확인)",
+    notice: "영재교육 담당(연 0.02), 수업선도교사(연 0.06, 상한 0.18)·수업명인(연 0.09, 상한 0.27), 다자녀(0.3/0.5)는 ‘직접 입력 가산점’으로 넣으세요. 직무연수 학점은 2013년 이후 기준(연 0.12)으로만 계산합니다. 한센·특수 합산 1.5, 고교+정책지원학교 합산 2.2·2.5 같은 소그룹 상한과 2020. 2. 29.까지 보직 1.25점 상한은 반영하지 않았습니다.",
+    commonCaps: { creditsYear: 0.12 },
+    groups: {
+      gArea: { name: "도서·벽지·농어촌교육진흥지역 학교 근무경력", cap: 3.5 },
+      gRes: { name: "교육감 지정 연구학교 (공통 연구학교와 합산 1.0)", cap: 1.0 },
+      gHead: { name: "보직(부장)교사 경력", cap: 2.0 },
+      gSpecial: { name: "특수 경력 및 실적 (한센·특수, 장학사, 연구주무, 발명, 고교, 정책지원학교, 청소년단체 등)", cap: 3.0 },
+      gExtra: { name: "장기근속 유공", cap: 0.6 }
+    },
+    items: {
+      islandGB: { g: "gArea", name: "도서·벽지 교육(행정)기관 근무경력", cap: 3.0, grades: ["가", "나", "다", "라"], periods: [
+        { to: "1997-12-31", label: "~1997", r: { "가": [0.075, 0.0025], "나": [0.0576, 0.00192], "다": [0.0396, 0.00132], "라": [0.0222, 0.00074] } },
+        { from: "1998-01-01", to: "2002-02-28", label: "1998~2002.2", r: { "가": [0.0394, 0.00131], "나": [0.0318, 0.00106], "다": [0.0234, 0.00078], "라": [0.0159, 0.00053] } },
+        { from: "2002-03-01", to: "2003-02-28", label: "2002.3~2003.2", r: { "가": [0.0394, 0.00131], "나": [0.0318, 0.00106], "다": [0.0234, 0.00078], "라": [0.0187, 0.00062] } },
+        { from: "2003-03-01", label: "2003.3~", r: { "가": [0.0525, 0.00175], "나": [0.045, 0.00151], "다": [0.0281, 0.00093], "라": [0.0234, 0.00078] } }] },
+      ruralGB: { g: "gArea", name: "농어촌교육진흥지역(읍·면) 학교 근무경력 (1995.3.1.~)", cap: 1.75, periods: [{ from: "1995-03-01", m: 0.015, d: 0.0005 }] },
+      research2: { g: "gRes", name: "교육감 지정 연구·시범·실험학교", cap: 1.0, periods: [{ m: 0.010, d: 0.0003 }] },
+      head: { g: "gHead", name: "보직(부장)교사 경력 (1급 정교사·전문상담교사)", cap: 2.0, periods: [{ from: "1971-01-25", m: 0.015, d: 0.0005 }] },
+      hansenGB: { g: "gSpecial", name: "한센인 자녀 학교·학급 담당 (1973.8.8.~2008.12.31.)", cap: 0.9, periods: [{ from: "1973-08-08", to: "2008-12-31", m: 0.015, d: 0.0005 }] },
+      spedGB: { g: "gSpecial", name: "특수학교·특수학급·통합교육학급 담당 (~2007.2.28.)", cap: 0.9, grades: ["특수학교(경희·상희)", "특수학급", "통합교육학급"], periods: [
+        { to: "2007-02-28", label: "특수학교", r: { "특수학교(경희·상희)": [0.015, 0.0005] } },
+        { from: "1973-08-08", to: "1995-02-28", label: "특수학급 ~1995.2.", r: { "특수학급": [0.015, 0.0005] } },
+        { from: "1995-03-01", to: "2007-02-28", label: "특수학급 1995.3.~", r: { "특수학급": [0.010, 0.00033] } },
+        { from: "2002-03-01", to: "2007-02-28", label: "통합 2002.3.~", r: { "통합교육학급": [0.003, 0.0001] } }] },
+      supervisor: { g: "gSpecial", name: "장학사·교육연구사 근무경력", cap: 0.75, periods: [{ m: 0.015, d: 0.0005 }] },
+      researchChief: { g: "gSpecial", name: "도·교육부 지정 연구학교 연구주무 (2002.3.1.~)", cap: 3.0, periods: [{ from: "2002-03-01", m: 0.005, d: 0.00016 }] },
+      inventionGB: { g: "gSpecial", name: "발명교실 담당교사 (2002.3.1.~)", cap: 3.0, periods: [{ from: "2002-03-01", m: 0.005, d: 0.00016 }] },
+      highGB: { g: "gSpecial", name: "고등학교 교사 근무경력 (2003.3.1.~)", cap: 2.0, periods: [{ from: "2003-03-01", m: 0.017, d: 0.00056 }] },
+      policyGB: { g: "gSpecial", name: "정책지원학교 교사 근무경력 (2012.3.1.~)", cap: 2.2, periods: [{ from: "2012-03-01", m: 0.018, d: 0.0006 }] },
+      policyRural: { g: "gSpecial", name: "농어촌(읍·면) 소재 정책지원학교 전문교과 교사 (2013.6.1.~)", cap: 2.5, periods: [{ from: "2013-06-01", m: 0.02, d: 0.00067 }] },
+      youthGB: { g: "gSpecial", name: "청소년단체 담당교사 (2009.1.1.~)", cap: 3.0, periods: [{ from: "2009-01-01", m: 0.001, d: 0.000033 }] },
+      longService: { g: "gExtra", name: "장기근속 유공 (교사 경력 20년 초과 기간만 입력)", cap: 0.6, periods: [{ m: 0.01, d: 0.00033 }] }
+    },
+    /* [별표 1] 선택가산점 중복 경력 및 실적 인정 제한 기준 */
+    pairs: ["islandGB|ruralGB", "islandGB|supervisor", "islandGB|highGB", "islandGB|hansenGB", "islandGB|spedGB", "islandGB|policyGB",
+      "research|research2", "head|hansenGB", "head|spedGB", "head|youthGB", "head|highGB",
+      "ruralGB|hansenGB", "ruralGB|spedGB", "ruralGB|policyGB", "ruralGB|highGB", "highGB|policyGB",
+      "supervisor|head", "supervisor|ruralGB", "supervisor|research2", "supervisor|highGB", "supervisor|policyGB", "supervisor|youthGB", "supervisor|overseas"],
+    groupCap: function (g, base, res) {
+      return g === "gRes" ? Math.max(0, 1.0 - (res.items.research ? res.items.research.val : 0)) : null;
+    }
+  };
+
   // 시·도와 학교급. RULESETS에 없는 조합은 선택가산점 없이 경력·근평·연수·공통가산점만 계산
   var REGIONS = [["seoul", "서울"], ["busan", "부산"], ["daegu", "대구"], ["incheon", "인천"], ["gwangju", "광주"], ["daejeon", "대전"],
     ["ulsan", "울산"], ["sejong", "세종"], ["gyeonggi", "경기"], ["gangwon", "강원"], ["chungbuk", "충북"], ["chungnam", "충남"],
@@ -1314,7 +1360,7 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
     state.credits.forEach(function (c) { var y = (c.year || "").trim() || "?"; byYear[y] = (byYear[y] || 0) + num(c.credits); });
     var cr = 0, crLines = [];
     Object.keys(byYear).sort().forEach(function (y) {
-      var v = Math.min(byYear[y] * 0.02, 0.08); cr += v; crLines.push(y + "학년도 " + byYear[y] + "학점 → " + f4(v));
+      var v = Math.min(byYear[y] * 0.02, (REG.commonCaps && REG.commonCaps.creditsYear) || 0.08); cr += v; crLines.push(y + "학년도 " + byYear[y] + "학점 → " + f4(v));
     });
     addCount("credits", "common", "직무연수 이수실적 (학점)", cr, (REG.commonCaps && REG.commonCaps.credits) || 1.0, crLines.join(", "));
     addCount("violence", "common", "학교폭력 예방·대응 실적", num(state.violence) * 0.1, 1.0, num(state.violence) ? num(state.violence) + "년 × 0.1" : "");
