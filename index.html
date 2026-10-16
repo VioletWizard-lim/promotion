@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>중등 승진 가산점 계산기</title>
+<title>중등 승진 평정 계산기</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -130,8 +130,26 @@ td.n { font-family: var(--font-num); text-align: right; font-variant-numeric: ta
 tr.grp td { background: var(--accent-soft); font-weight: 500; }
 .cut { color: var(--over); }
 
-.overall { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; align-items: end; }
-.overall .sum { font-family: var(--font-num); font-size: 22px; }
+.total .num.small { font-size: 26px; }
+.kv { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
+.kv > div { background: var(--accent-soft); border-radius: 4px; padding: 8px 10px; min-width: 0; }
+.kv .k { font-size: 12px; color: var(--muted); }
+.kv .v { font-family: var(--font-num); font-size: 17px; font-variant-numeric: tabular-nums; }
+.kv .d { font-size: 12px; color: var(--muted); }
+.kv > div.main { background: var(--accent); color: var(--surface); }
+.kv > div.main .k, .kv > div.main .d { color: var(--surface); opacity: .85; }
+.mini-row.c3 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) auto; }
+.mini-row.c4 { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) auto; }
+@media (max-width: 640px) {
+  .mini-row.c3, .mini-row.c4 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .mini-row.c3 > button, .mini-row.c4 > button { justify-self: end; }
+}
+.mini-row .tag { font-size: 12px; color: var(--muted); align-self: center; }
+.mini-row .tag.on { color: var(--ok); font-weight: 500; }
+.rules-form { display: grid; gap: 14px; }
+.rules-form fieldset { border: 1px solid var(--line); border-radius: 4px; padding: 10px 12px; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; min-width: 0; }
+.rules-form legend { font-size: 13px; font-weight: 500; padding: 0 4px; }
+details summary small { font-weight: 400; }
 details summary { cursor: pointer; font-weight: 500; }
 details[open] summary { margin-bottom: 8px; }
 .rules { font-size: 13px; color: var(--muted); display: grid; gap: 6px; margin: 0; padding-left: 18px; }
@@ -144,9 +162,9 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
 <body>
 <div class="wrap">
   <header>
-    <div class="eyebrow">인천광역시교육청 공고 제2026-319호 · 2026. 7. 24. 개정 기준</div>
-    <h1>중등 승진 가산점 계산기</h1>
-    <p class="lede">나이스에서 내려받은 인사기록카드의 경력·연수·상훈 내용을 옮겨 적으면 「교육공무원승진규정 중 가산점 부여기준(중등)」에 따라 공통가산점과 선택가산점을 간이로 계산합니다. 입력한 내용은 이 브라우저에만 저장됩니다.</p>
+    <div class="eyebrow">교육공무원 승진규정 · 인천 가산점 부여기준(중등) 2026. 7. 24. 개정 반영</div>
+    <h1>중등 승진 평정 계산기</h1>
+    <p class="lede">나이스에서 내려받은 인사기록카드의 경력·근무성적·연수·상훈·학위 내용을 옮겨 적으면 경력평정, 근무성적평정, 연수성적평정(연구대회 포함)과 「가산점 부여기준(중등)」의 공통·선택가산점을 모두 더해 승진 평정 총점을 간이로 계산합니다. 입력한 내용은 이 브라우저에만 저장됩니다.</p>
   </header>
 
   <div class="banner" id="sampleBanner" hidden>
@@ -166,8 +184,58 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
         </div>
       </section>
 
+      <section class="card" id="sec-career">
+        <h2>① 경력평정 <small>만점 70 · 인사기록카드 ‘경력사항’</small></h2>
+        <p class="note">교육경력 기간을 경력 등급별로 입력하세요. 평정 기준일부터 거슬러 15년은 기본경력, 그 앞 5년은 초과경력으로 자동 배분합니다. 휴직 등 경력에서 빠지는 기간은 행을 나눠 제외하세요.</p>
+        <div class="mini-rows" id="careers"></div>
+        <div class="row-actions"><button type="button" id="addCareer">경력 추가</button></div>
+        <div class="kv" id="careerOut"></div>
+        <p class="hint">가경력: 교사·교감·장학사·교육연구사 등 교육공무원 경력 대부분 · 나·다경력: 강사, 일부 기관 근무 등. 등급 구분은 「교육공무원 승진규정」 별표 1을 확인하세요.</p>
+      </section>
+
+      <section class="card" id="sec-perf">
+        <h2>② 근무성적평정 <small>만점 100 · 연도별 근무성적(다면평가 합산점)</small></h2>
+        <p class="note">해마다 학교에서 통보받은 근무성적평정 합산점(100점 만점)을 입력하세요. 최근 5년 중 유리한 3년을 자동으로 골라 반영비율로 계산합니다.</p>
+        <div class="mini-rows" id="perfs"></div>
+        <div class="row-actions"><button type="button" id="addPerf">연도 추가</button></div>
+        <div class="kv" id="perfOut"></div>
+      </section>
+
+      <section class="card" id="sec-train">
+        <h2>③ 연수성적평정 <small>만점 30 · 인사기록카드 ‘연수’, ‘상훈’, ‘학력’</small></h2>
+        <div class="sub" style="border-top:0;padding-top:0">
+          <h3>직무연수 (평정기준일 전 10년 이내, 60시간 이상)</h3>
+          <div class="mini-rows" id="jobs"></div>
+          <div class="row-actions"><button type="button" id="addJob">직무연수 추가</button></div>
+          <p class="note">성적이 가장 좋은 1개는 성적으로, 나머지 중 2개까지는 이수실적으로 반영합니다. 성적이 없고 ‘이수’로만 기록된 연수는 성적 칸을 비워 두세요.</p>
+        </div>
+        <div class="sub">
+          <h3>자격연수 (1급 정교사 자격연수 등)</h3>
+          <div class="grid-inputs">
+            <label for="qualScore">자격연수 성적
+              <input type="number" id="qualScore" min="0" step="0.01" data-k="qualScore" placeholder="예: 96.5">
+            </label>
+            <label for="qualFull">성적 만점
+              <input type="number" id="qualFull" min="1" step="1" data-k="qualFull" placeholder="100">
+            </label>
+          </div>
+        </div>
+        <div class="sub">
+          <h3>연구실적 — 연구대회 입상</h3>
+          <div class="mini-rows" id="contests"></div>
+          <div class="row-actions"><button type="button" id="addContest">입상 실적 추가</button></div>
+          <p class="note">같은 해 입상이 여러 개면 가장 높은 1개만 반영합니다.</p>
+        </div>
+        <div class="sub">
+          <h3>연구실적 — 학위</h3>
+          <div class="mini-rows" id="degrees"></div>
+          <div class="row-actions"><button type="button" id="addDegree">학위 추가</button></div>
+        </div>
+        <div class="kv" id="trainOut"></div>
+      </section>
+
       <section class="card">
-        <h2>경력 기간 <small>인사기록카드 ‘경력사항’, 보직·담임 기록</small></h2>
+        <h2>④ 가산점 — 경력 기간 <small>인사기록카드 ‘경력사항’, 보직·담임 기록</small></h2>
         <div class="school-find">
           <label for="schoolSearch">학교명으로 항목 찾기
             <input id="schoolSearch" list="schoolList" placeholder="예: 강화고, 인천하늘중">
@@ -184,7 +252,7 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
       </section>
 
       <section class="card">
-        <h2>공통가산점 실적 <small>연수이수실적, 학교폭력 예방 실적</small></h2>
+        <h2>⑤ 공통가산점 실적 <small>연수이수실적, 학교폭력 예방 실적</small></h2>
         <div class="sub" style="border-top:0;padding-top:0">
           <h3>직무연수 학점 (학점당 0.02, 학년도별 0.08 상한, 총 1.0)</h3>
           <div class="mini-rows" id="credits"></div>
@@ -198,7 +266,7 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
       </section>
 
       <section class="card">
-        <h2>선택가산점 실적 <small>건수·등급으로 매기는 항목</small></h2>
+        <h2>⑥ 선택가산점 실적 <small>건수·등급으로 매기는 항목</small></h2>
         <div class="sub" style="border-top:0;padding-top:0">
           <h3>교육감인정 연구경력</h3>
           <div class="grid-inputs">
@@ -248,28 +316,19 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
       </section>
 
       <section class="card">
-        <h2>항목별 상세</h2>
+        <h2>가산점 항목별 상세</h2>
         <div class="tbl-wrap"><table id="detail"></table></div>
       </section>
 
       <section class="card">
-        <h2>승진 평정 합계 (참고) <small>다른 평정점은 직접 입력</small></h2>
-        <div class="overall">
-          <label for="career">경력평정점
-            <input type="number" id="career" step="0.001" min="0" data-k="career" placeholder="만점 70">
-          </label>
-          <label for="perf">근무성적평정점
-            <input type="number" id="perf" step="0.001" min="0" data-k="perf" placeholder="만점 100">
-          </label>
-          <label for="training">연수성적평정점
-            <input type="number" id="training" step="0.001" min="0" data-k="training" placeholder="만점 30">
-          </label>
-          <div>
-            <div class="hint">합계 (가산점 포함)</div>
-            <div class="sum" id="overallSum">–</div>
+        <details id="rulesBox">
+          <summary>평정 기준값 보기·수정 <small class="hint">규정이 바뀌었거나 교육청 요령과 다르면 여기서 고치세요</small></summary>
+          <div style="display:grid;gap:14px">
+            <p class="note">경력·근무성적·연수성적 기준값은 「교육공무원 승진규정」과 시·도교육청 평정업무 처리요령을 바탕으로 넣은 기본값입니다. 2026. 6. 16. 개정 내용이나 인천 처리요령과 다르면 값을 고치면 바로 다시 계산됩니다.</p>
+            <div id="rulesForm" class="rules-form"></div>
+            <div class="row-actions"><button type="button" id="resetRules">기본값으로 되돌리기</button></div>
           </div>
-        </div>
-        <p class="note">경력·근무성적·연수성적은 학교에서 받은 평정 결과나 본인 계산값을 넣으세요. 만점 표시는 참고용이며 최신 「교육공무원 승진규정」을 확인하세요.</p>
+        </details>
       </section>
 
       <section class="card">
@@ -303,13 +362,19 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
         </details>
       </section>
 
-      <footer>이 계산기는 고시문을 바탕으로 한 간이 계산 도구이며 공식 평정 결과가 아닙니다. 부칙의 경과조치, 자격 종류별 평정기간(예: 2급 정교사 보직경력은 2023. 3. 1. 이후) 등 세부 요건은 학교 승진 담당자 확인이 필요합니다.</footer>
+      <footer>이 계산기는 본인 승진 점수를 관리하기 위한 간이 계산 도구이며 공식 평정 결과가 아닙니다. 경력·근무성적·연수성적 기준값은 ‘평정 기준값’에서 확인·수정할 수 있습니다. 부칙의 경과조치, 자격 종류별 평정기간(예: 2급 정교사 보직경력은 2023. 3. 1. 이후) 등 세부 요건은 학교 승진 담당자 확인이 필요합니다.</footer>
     </main>
 
     <aside class="summary" aria-label="평정 요약">
       <div class="total">
+        <div class="eyebrow">승진 평정 총점</div>
+        <div class="num" id="sumTotal">0.000</div>
+        <div class="cap">경력 + 근무성적 + 연수성적 + 가산점</div>
+      </div>
+      <div class="meters" id="mainMeters"></div>
+      <div class="total" style="border-top:1px solid var(--line);padding-top:12px">
         <div class="eyebrow">가산점 합계</div>
-        <div class="num" id="sumAll">0.0000</div>
+        <div class="num small" id="sumAll">0.0000</div>
         <div class="cap" id="sumCap"></div>
       </div>
       <div class="split">
@@ -423,14 +488,41 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
   /* ---------- 상태 ---------- */
   var uid = 0;
   function nid() { return "p" + Date.now().toString(36) + (uid++); }
+  /* ---------- 경력·근무성적·연수성적 기준값 (화면에서 수정 가능) ---------- */
+  var RULE_DEFAULTS = {
+    cBaseYears: 15, cExtraYears: 5, cBaseMax: 64, cExtraMax: 6,
+    cGaM: 0.3555, cGaD: 0.0118, cNaM: 0.3333, cNaD: 0.0111, cDaM: 0.3111, cDaD: 0.0103,
+    xGaM: 0.1, xGaD: 0.0033, xNaM: 0.0833, xNaD: 0.0027, xDaM: 0.0667, xDaD: 0.0022,
+    pPool: 5, pPick: 3, pW1: 34, pW2: 33, pW3: 33,
+    tScorePts: 6, tCountPts: 6, tCountMax: 2, tJobMax: 18, tStep: 1,
+    qMax: 9, qK: 0.05, eduMax: 27,
+    rN1: 1.5, rN2: 1.25, rN3: 1.0, rS1: 1.0, rS2: 0.75, rS3: 0.5,
+    dPhdJ: 3.0, dPhdO: 1.5, dMaJ: 1.5, dMaO: 1.0, rMax: 3
+  };
+  var RULE_FORM = [
+    { legend: "경력평정 — 기간과 만점", keys: [["cBaseYears", "기본경력 연수"], ["cExtraYears", "초과경력 연수"], ["cBaseMax", "기본경력 만점"], ["cExtraMax", "초과경력 만점"]] },
+    { legend: "경력평정 — 기본경력 평정점", keys: [["cGaM", "가경력 월"], ["cGaD", "가경력 일"], ["cNaM", "나경력 월"], ["cNaD", "나경력 일"], ["cDaM", "다경력 월"], ["cDaD", "다경력 일"]] },
+    { legend: "경력평정 — 초과경력 평정점", keys: [["xGaM", "가경력 월"], ["xGaD", "가경력 일"], ["xNaM", "나경력 월"], ["xNaD", "나경력 일"], ["xDaM", "다경력 월"], ["xDaD", "다경력 일"]] },
+    { legend: "근무성적평정", keys: [["pPool", "대상 기간(최근 N년)"], ["pPick", "반영 연수(유리한 N년)"], ["pW1", "가장 최근 연도 비율(%)"], ["pW2", "두 번째 비율(%)"], ["pW3", "세 번째 비율(%)"]] },
+    { legend: "연수성적 — 교육성적", keys: [["tScorePts", "직무연수 성적 배점"], ["tCountPts", "이수실적 1회 배점"], ["tCountMax", "이수실적 최대 횟수"], ["tJobMax", "직무연수 만점"], ["tStep", "5점 구간 환산 (1=사용, 0=원점수)"], ["qMax", "자격연수 만점"], ["qK", "자격연수 감점 계수"], ["eduMax", "교육성적 만점"]] },
+    { legend: "연수성적 — 연구실적", keys: [["rN1", "전국 1등급"], ["rN2", "전국 2등급"], ["rN3", "전국 3등급"], ["rS1", "시·도 1등급"], ["rS2", "시·도 2등급"], ["rS3", "시·도 3등급"], ["dPhdJ", "박사 (직무관련)"], ["dPhdO", "박사 (기타)"], ["dMaJ", "석사 (직무관련)"], ["dMaO", "석사 (기타)"], ["rMax", "연구실적 만점"]] }
+  ];
+  function R(k) { var v = state.rules && state.rules[k]; v = parseFloat(v); return isFinite(v) ? v : RULE_DEFAULTS[k]; }
+
   function blank() {
     return { sample: false, baseDate: "2027-02-28", periods: [], credits: [], semesters: [],
       violence: "", prac26: "", prac68: "", award1: "", award2: "", award3: "", cert: "", youth: "",
-      career: "", perf: "", training: "" };
+      careers: [], perfs: [], jobs: [], contests: [], degrees: [], qualScore: "", qualFull: "100", rules: {} };
   }
   function sample() {
     var s = blank();
     s.sample = true;
+    s.careers = [{ id: nid(), grade: "가", from: "2011-03-01", to: "", note: "중등 교사 (예시)" }];
+    s.perfs = [["2022", "96.2"], ["2023", "97.5"], ["2024", "95.8"], ["2025", "98.1"], ["2026", "97.4"]].map(function (x) { return { id: nid(), year: x[0], score: x[1] }; });
+    s.jobs = [["수업 디자인 직무연수 (예시)", "2023", "98.5"], ["학생 생활교육 직무연수 (예시)", "2024", "94"], ["AI 활용 교육 직무연수 (예시)", "2025", ""]].map(function (x) { return { id: nid(), name: x[0], year: x[1], score: x[2] }; });
+    s.qualScore = "95.2";
+    s.contests = [{ id: nid(), year: "2019", level: "시도", rank: "1" }, { id: nid(), year: "2022", level: "전국", rank: "3" }];
+    s.degrees = [{ id: nid(), type: "maJ", note: "교육대학원 석사 (예시)" }];
     s.periods = [
       { id: nid(), item: "island", grade: "E", from: "2013-03-01", to: "2017-02-28", note: "강화고 (예시)" },
       { id: nid(), item: "special", grade: "A", from: "2017-03-01", to: "2021-02-28", note: "인천국제고 (예시)" },
@@ -579,6 +671,139 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
     return res;
   }
 
+  /* ---------- 경력평정 ---------- */
+  var GRADE_KEY = { "가": "Ga", "나": "Na", "다": "Da" };
+  function r4(x) { return Math.round(x * 10000) / 10000; }
+  function computeCareer() {
+    var base = parse(state.baseDate), out = { base: 0, extra: 0, baseSpan: { m: 0, d: 0 }, extraSpan: { m: 0, d: 0 }, rows: {} };
+    if (base == null) return out;
+    var baseStart = addMonths(base + DAY, -12 * R("cBaseYears"));
+    var extraStart = addMonths(baseStart, -12 * R("cExtraYears"));
+    var wins = [
+      { key: "base", lo: baseStart, hi: base, pre: "c", max: R("cBaseMax") },
+      { key: "extra", lo: extraStart, hi: baseStart - DAY, pre: "x", max: R("cExtraMax") }
+    ];
+    wins.forEach(function (w) {
+      var agg = {};
+      state.careers.forEach(function (c) {
+        var s = parse(c.from), e = c.to ? parse(c.to) : base;
+        if (s == null || e == null) return;
+        var cl = clip(s, Math.min(e, base), w.lo, w.hi);
+        if (!cl) return;
+        var sp = span(cl[0], cl[1]), g = GRADE_KEY[c.grade] || "Ga";
+        agg[g] = agg[g] || { m: 0, d: 0 };
+        agg[g].m += sp.m; agg[g].d += sp.d;
+        out.rows[c.id] = out.rows[c.id] || { m: 0, d: 0 };
+        out.rows[c.id].m += sp.m; out.rows[c.id].d += sp.d;
+      });
+      var pts = 0, tot = { m: 0, d: 0 };
+      Object.keys(agg).forEach(function (g) {
+        var a = agg[g]; a.m += Math.floor(a.d / 30); a.d %= 30;
+        tot.m += a.m; tot.d += a.d;
+      });
+      tot.m += Math.floor(tot.d / 30); tot.d %= 30;
+      var fullM = 12 * R(w.key === "base" ? "cBaseYears" : "cExtraYears");
+      // 기간을 다 채우면 등급별 만점(월 평정점 × 개월 수를 정수로)으로 평정: 가경력 15년 = 64점
+      var full = tot.m >= fullM;
+      Object.keys(agg).forEach(function (g) {
+        var a = agg[g], rm = R(w.pre + g + "M");
+        pts += full ? a.m * Math.round(rm * fullM) / fullM : a.m * rm + a.d * R(w.pre + g + "D");
+      });
+      out[w.key] = Math.min(r4(pts), w.max);
+      out[w.key + "Span"] = tot;
+    });
+    out.total = out.base + out.extra;
+    out.max = R("cBaseMax") + R("cExtraMax");
+    return out;
+  }
+
+  /* ---------- 근무성적평정 ---------- */
+  function computePerf() {
+    var base = parse(state.baseDate), out = { total: 0, used: {}, note: "" };
+    var lastYear = base == null ? new Date().getUTCFullYear() - 1 : new Date(base).getUTCFullYear() - 1;
+    var pool = R("pPool"), pick = Math.max(1, Math.round(R("pPick")));
+    var w = [R("pW1"), R("pW2"), R("pW3")];
+    var byYear = {};
+    state.perfs.forEach(function (p) {
+      var y = parseInt(p.year, 10), v = parseFloat(p.score);
+      if (!isFinite(y) || !isFinite(v) || y > lastYear || y <= lastYear - pool) return;
+      if (!(y in byYear) || v > byYear[y].v) byYear[y] = { v: v, id: p.id };
+    });
+    var years = Object.keys(byYear).map(Number).sort(function (a, b) { return b - a; });
+    out.range = (lastYear - pool + 1) + "~" + lastYear;
+    if (!years.length) { out.note = "반영할 연도가 없습니다"; return out; }
+    var k = Math.min(pick, years.length), best = null;
+    (function choose(start, chosen) {
+      if (chosen.length === k) {
+        var sw = 0, sum = 0;
+        chosen.forEach(function (y, i) { var wi = w[i] != null ? w[i] : w[w.length - 1]; sum += byYear[y].v * wi; sw += wi; });
+        var val = sum / sw;
+        if (!best || val > best.val) best = { val: val, years: chosen.slice() };
+        return;
+      }
+      for (var i = start; i < years.length; i++) { chosen.push(years[i]); choose(i + 1, chosen); chosen.pop(); }
+    })(0, []);
+    best.years.forEach(function (y) { out.used[byYear[y].id] = true; });
+    out.total = r4(best.val);
+    out.years = best.years;
+    if (k < pick) out.note = "반영 연도가 " + pick + "년보다 적어 있는 연도만 평균했습니다";
+    return out;
+  }
+
+  /* ---------- 연수성적평정 ---------- */
+  function convJob(v) {
+    if (!R("tStep")) return Math.min(v, 100);
+    if (v > 95) return 100;
+    if (v > 90) return 95;
+    if (v > 85) return 90;
+    if (v > 80) return 85;
+    return 80;
+  }
+  function computeTraining() {
+    var out = { used: {}, counted: {} };
+    var scored = state.jobs.filter(function (j) { return isFinite(parseFloat(j.score)); })
+      .sort(function (a, b) { return parseFloat(b.score) - parseFloat(a.score); });
+    var best = scored[0];
+    var scorePart = best ? R("tScorePts") * convJob(parseFloat(best.score)) / 100 : 0;
+    if (best) out.used[best.id] = true;
+    var rest = state.jobs.filter(function (j) { return !best || j.id !== best.id; })
+      .filter(function (j) { return (j.name || "").trim() || j.year || j.score; });
+    var cnt = Math.min(rest.length, R("tCountMax"));
+    rest.slice(0, cnt).forEach(function (j) { out.counted[j.id] = true; });
+    out.job = Math.min(r4(scorePart + cnt * R("tCountPts")), R("tJobMax"));
+    out.jobDesc = (best ? "성적 " + convJob(parseFloat(best.score)) + "점 환산" : "성적 연수 없음") + " · 이수 " + cnt + "회";
+
+    var qs = parseFloat(state.qualScore), qf = parseFloat(state.qualFull) || 100;
+    out.qual = 0; out.qualDesc = "미입력";
+    if (isFinite(qs)) {
+      var ratio = qs / qf;
+      if (ratio < 0.6) { out.qual = 0; out.qualDesc = "만점의 60% 미만은 평정하지 않음"; }
+      else {
+        var q = ratio < 0.8 ? qf * 0.8 : qs;
+        out.qual = Math.max(0, Math.min(R("qMax"), r4(R("qMax") - (qf - q) * R("qK"))));
+        out.qualDesc = R("qMax") + " − (" + qf + " − " + q + ") × " + R("qK");
+      }
+    }
+    out.edu = Math.min(out.job + out.qual, R("eduMax"));
+
+    var byYear = {};
+    state.contests.forEach(function (c) {
+      var lv = c.level === "전국" ? "N" : "S", v = R("r" + lv + (parseInt(c.rank, 10) || 3));
+      var y = c.year || c.id;
+      if (!(y in byYear) || v > byYear[y].v) byYear[y] = { v: v, id: c.id };
+    });
+    out.contest = 0; out.contestUsed = {};
+    Object.keys(byYear).forEach(function (y) { out.contest += byYear[y].v; out.contestUsed[byYear[y].id] = true; });
+    var DEG = { phdJ: "dPhdJ", phdO: "dPhdO", maJ: "dMaJ", maO: "dMaO" };
+    out.degree = 0;
+    state.degrees.forEach(function (d) { out.degree += DEG[d.type] ? R(DEG[d.type]) : 0; });
+    out.researchRaw = out.contest + out.degree;
+    out.research = Math.min(r4(out.researchRaw), R("rMax"));
+    out.total = out.edu + out.research;
+    out.max = R("eduMax") + R("rMax");
+    return out;
+  }
+
   /* ---------- 렌더링 ---------- */
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
   var ITEM_OPTIONS = (function () {
@@ -623,18 +848,42 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
       cell.innerHTML = "<b>" + f4(r.pts) + "</b><span>" + fmtSpan(r.tot) + "</span>";
     });
   }
-  function renderMini(elId, list, fields) {
+  function renderMini(elId, list, fields, cls) {
     var el = document.getElementById(elId);
     el.innerHTML = "";
     list.forEach(function (c) {
       var d = document.createElement("div");
-      d.className = "mini-row"; d.dataset.id = c.id;
+      d.className = "mini-row" + (cls ? " " + cls : ""); d.dataset.id = c.id;
       d.innerHTML = fields.map(function (f) {
-        return '<label for="' + f.k + "_" + c.id + '">' + f.label + '<input type="' + f.type + '" data-f="' + f.k + '" id="' + f.k + "_" + c.id + '" value="' + esc(c[f.k]) + '" min="0" step="' + (f.step || 1) + '" placeholder="' + (f.ph || "") + '"></label>';
+        var id = f.k + "_" + c.id;
+        if (f.tag) return '<span class="tag" data-tag></span>';
+        if (f.type === "select") {
+          return '<label for="' + id + '">' + f.label + '<select data-f="' + f.k + '" id="' + id + '">' +
+            f.options.map(function (o) { return '<option value="' + esc(o[0]) + '"' + (String(c[f.k]) === o[0] ? " selected" : "") + ">" + esc(o[1]) + "</option>"; }).join("") + "</select></label>";
+        }
+        return '<label for="' + id + '">' + f.label + '<input type="' + f.type + '" data-f="' + f.k + '" id="' + id + '" value="' + esc(c[f.k]) + '" min="0" step="' + (f.step || 1) + '" placeholder="' + (f.ph || "") + '"></label>';
       }).join("") + '<button type="button" class="ghost" data-del aria-label="삭제" title="삭제">✕</button>';
       el.appendChild(d);
     });
     if (!list.length) el.innerHTML = '<p class="note">입력한 항목이 없습니다.</p>';
+  }
+  function renderRules() {
+    var box = document.getElementById("rulesForm");
+    box.innerHTML = RULE_FORM.map(function (g) {
+      return "<fieldset><legend>" + esc(g.legend) + "</legend>" + g.keys.map(function (k) {
+        var v = state.rules && state.rules[k[0]] != null && state.rules[k[0]] !== "" ? state.rules[k[0]] : "";
+        return '<label for="rule_' + k[0] + '">' + esc(k[1]) + '<input type="number" step="any" id="rule_' + k[0] + '" data-rule="' + k[0] + '" value="' + esc(v) + '" placeholder="' + RULE_DEFAULTS[k[0]] + '"></label>';
+      }).join("") + "</fieldset>";
+    }).join("");
+  }
+  function tagRows(elId, used, labelOn, labelOff, extra) {
+    document.querySelectorAll("#" + elId + " .mini-row").forEach(function (row) {
+      var t = row.querySelector("[data-tag]"); if (!t) return;
+      var id = row.dataset.id;
+      if (used[id]) { t.textContent = labelOn; t.className = "tag on"; }
+      else if (extra && extra[id]) { t.textContent = extra[id]; t.className = "tag on"; }
+      else { t.textContent = labelOff; t.className = "tag"; }
+    });
   }
   function renderStatic() {
     document.getElementById("baseDate").value = state.baseDate || "";
@@ -643,6 +892,25 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
     renderPeriods();
     renderMini("credits", state.credits, [{ k: "year", label: "학년도", type: "number", ph: "2025" }, { k: "credits", label: "이수 학점", type: "number", step: "0.5", ph: "4" }]);
     renderMini("semesters", state.semesters, [{ k: "label", label: "학기", type: "text", ph: "2026-1학기" }, { k: "months", label: "운영 개월 수", type: "number", step: "0.5", ph: "3" }]);
+    renderMini("careers", state.careers, [
+      { k: "grade", label: "경력 등급", type: "select", options: [["가", "가경력"], ["나", "나경력"], ["다", "다경력"]] },
+      { k: "from", label: "시작일", type: "date" }, { k: "to", label: "종료일 (비우면 기준일)", type: "date" },
+      { k: "note", label: "메모", type: "text", ph: "학교·직위" }], "c4");
+    renderMini("perfs", state.perfs, [
+      { k: "year", label: "평정 연도", type: "number", ph: "2026" },
+      { k: "score", label: "합산점 (100점 만점)", type: "number", step: "0.001", ph: "97.5" }, { tag: true }], "c3");
+    renderMini("jobs", state.jobs, [
+      { k: "name", label: "연수명", type: "text", ph: "○○ 직무연수 (60시간)" },
+      { k: "year", label: "이수 연도", type: "number", ph: "2025" },
+      { k: "score", label: "성적 (없으면 비움)", type: "number", step: "0.01", ph: "98.5" }, { tag: true }], "c4");
+    renderMini("contests", state.contests, [
+      { k: "year", label: "입상 연도", type: "number", ph: "2024" },
+      { k: "level", label: "규모", type: "select", options: [["전국", "전국 규모"], ["시도", "시·도 규모"]] },
+      { k: "rank", label: "등급", type: "select", options: [["1", "1등급"], ["2", "2등급"], ["3", "3등급"]] }, { tag: true }], "c4");
+    renderMini("degrees", state.degrees, [
+      { k: "type", label: "학위 구분", type: "select", options: [["maJ", "석사 · 직무관련"], ["maO", "석사 · 기타"], ["phdJ", "박사 · 직무관련"], ["phdO", "박사 · 기타"]] },
+      { k: "note", label: "메모", type: "text", ph: "대학원·전공" }]);
+    renderRules();
   }
 
   function renderResults() {
@@ -683,11 +951,39 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
     th += "</tbody>";
     document.getElementById("detail").innerHTML = th;
 
-    var parts = ["career", "perf", "training"].map(function (k) { return parseFloat(state[k]); });
-    var filled = parts.filter(function (x) { return isFinite(x); });
-    document.getElementById("overallSum").textContent = filled.length
-      ? (filled.reduce(function (a, b) { return a + b; }, 0) + res.total).toFixed(4) + (filled.length < 3 ? " (일부 입력)" : "")
-      : "–";
+    var cr = computeCareer(), pf = computePerf(), tr = computeTraining();
+    function kv(k, v, d, main) { return '<div' + (main ? ' class="main"' : "") + '><div class="k">' + esc(k) + '</div><div class="v">' + v + '</div>' + (d ? '<div class="d">' + esc(d) + "</div>" : "") + "</div>"; }
+    document.getElementById("careerOut").innerHTML =
+      kv("기본경력 (" + R("cBaseYears") + "년)", f4(cr.base) + " / " + R("cBaseMax"), fmtSpan(cr.baseSpan)) +
+      kv("초과경력 (" + R("cExtraYears") + "년)", f4(cr.extra) + " / " + R("cExtraMax"), fmtSpan(cr.extraSpan)) +
+      kv("경력평정점", cr.total.toFixed(3), "만점 " + cr.max, true);
+    document.querySelectorAll("#careers .mini-row").forEach(function (row) {
+      var r = cr.rows[row.dataset.id];
+      row.title = r ? "평정기간 안에 든 기간: " + fmtSpan(r) : "평정기간(최근 " + (R("cBaseYears") + R("cExtraYears")) + "년) 밖의 경력";
+    });
+    tagRows("perfs", pf.used, "반영", "미반영");
+    document.getElementById("perfOut").innerHTML =
+      kv("대상 기간", pf.range || "–", "기준일 직전 연도부터") +
+      kv("반영 연도", pf.years ? pf.years.join(", ") : "–", "비율 " + [R("pW1"), R("pW2"), R("pW3")].join(" : ")) +
+      kv("근무성적평정점", pf.total.toFixed(3), pf.note || "만점 100", true);
+    var countedLbl = {}; Object.keys(tr.counted).forEach(function (id) { countedLbl[id] = "이수 반영"; });
+    tagRows("jobs", tr.used, "성적 반영", "미반영", countedLbl);
+    tagRows("contests", tr.contestUsed, "반영", "같은 해 하위 입상");
+    document.getElementById("trainOut").innerHTML =
+      kv("직무연수", f4(tr.job) + " / " + R("tJobMax"), tr.jobDesc) +
+      kv("자격연수", f4(tr.qual) + " / " + R("qMax"), tr.qualDesc) +
+      kv("연구실적", f4(tr.research) + " / " + R("rMax"), "대회 " + f4(tr.contest) + " + 학위 " + f4(tr.degree) + (tr.researchRaw > tr.research ? " (상한 적용)" : "")) +
+      kv("연수성적평정점", tr.total.toFixed(3), "만점 " + tr.max, true);
+
+    var grand = cr.total + pf.total + tr.total + res.total;
+    document.getElementById("sumTotal").textContent = grand.toFixed(3);
+    var mm = [["경력평정", cr.total, cr.max], ["근무성적평정", pf.total, 100], ["연수성적평정", tr.total, tr.max], ["가산점", res.total, null]];
+    document.getElementById("mainMeters").innerHTML = mm.map(function (m) {
+      var pct = m[2] ? Math.min(100, m[1] / m[2] * 100) : 0;
+      var full = m[2] && m[1] >= m[2] - 1e-9;
+      return '<div class="meter' + (full ? " full" : "") + '"><div class="top"><span>' + m[0] + '</span><span class="val">' + m[1].toFixed(3) + (m[2] ? " / " + m[2] : "") + "</span></div>" +
+        (m[2] ? '<div class="bar"><i style="width:' + pct.toFixed(1) + '%"></i></div>' : "") + "</div>";
+    }).join("");
     document.getElementById("backup").value = JSON.stringify(state);
     save();
   }
@@ -768,6 +1064,25 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
     return { id: nid(), year: ys.length ? String(Math.max.apply(null, ys) + 1) : "", credits: "" };
   }));
   document.getElementById("addSemester").addEventListener("click", miniHandlers("semesters", "semesters", function () { return { id: nid(), label: "", months: "" }; }));
+  document.getElementById("addCareer").addEventListener("click", miniHandlers("careers", "careers", function () {
+    var ends = state.careers.map(function (c) { return parse(c.to); }).filter(function (x) { return x != null; });
+    return { id: nid(), grade: "가", from: ends.length ? new Date(Math.max.apply(null, ends) + DAY).toISOString().slice(0, 10) : "", to: "", note: "" };
+  }));
+  function nextYear(list) {
+    var ys = list.map(function (c) { return parseInt(c.year, 10); }).filter(isFinite);
+    return ys.length ? String(Math.max.apply(null, ys) + 1) : "";
+  }
+  document.getElementById("addPerf").addEventListener("click", miniHandlers("perfs", "perfs", function () { return { id: nid(), year: nextYear(state.perfs), score: "" }; }));
+  document.getElementById("addJob").addEventListener("click", miniHandlers("jobs", "jobs", function () { return { id: nid(), name: "", year: "", score: "" }; }));
+  document.getElementById("addContest").addEventListener("click", miniHandlers("contests", "contests", function () { return { id: nid(), year: "", level: "시도", rank: "1" }; }));
+  document.getElementById("addDegree").addEventListener("click", miniHandlers("degrees", "degrees", function () { return { id: nid(), type: "maJ", note: "" }; }));
+  document.getElementById("rulesForm").addEventListener("input", function (e) {
+    var k = e.target.dataset.rule; if (!k) return;
+    state.rules = state.rules || {};
+    if (e.target.value === "") delete state.rules[k]; else state.rules[k] = e.target.value;
+    renderResults();
+  });
+  document.getElementById("resetRules").addEventListener("click", function () { state.rules = {}; renderRules(); renderResults(); });
 
   document.getElementById("clearSample").addEventListener("click", function () {
     var bd = state.baseDate; state = blank(); state.baseDate = bd; renderStatic(); renderResults();
