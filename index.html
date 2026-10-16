@@ -304,7 +304,7 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
 
       <section class="card step" id="s5" data-kind="score">
         <h2><span class="no">5</span>자격면허 <small>→ 선택가산점 (국가기술 자격증)</small><span class="sec-pts" data-pts="s5"></span></h2>
-        <div class="grid-inputs" data-only="incheon:mid incheon:ele busan:mid busan:ele chungbuk:mid gyeongnam:mid">
+        <div class="grid-inputs" data-only="incheon:mid incheon:ele busan:mid busan:ele chungbuk:mid gyeongnam:mid jeonnam:mid jeonnam:ele">
           <label for="cert">보유 자격증 최상위 등급 · 최대 0.5
             <select id="cert" data-k="cert">
               <option value="">해당 없음</option>
@@ -1051,6 +1051,84 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
     };
   })();
 
+  /* 전남: 「2026 전라남도교육공무원 승진후보자 평정업무 처리요령」(중등, 유·초등) — 가산점산정규정(훈령 제253호) */
+  function jeonnamRules(level) {
+    var ele = level === "ele";
+    var OLD = "2027-02-28";  // 2027. 3. 1. 이후 평정부터 연구학교·거주 경력 점수 변경
+    var islandR = { "도서 가": [0.167, 0.0056], "도서 나": [0.125, 0.0042], "도서 다": [0.084, 0.0028], "도서 라": [0.063, 0.0021],
+      "벽지 가": [0.084, 0.0028], "벽지 나": [0.063, 0.0021], "벽지 다": [0.050, 0.0017], "벽지 라": [0.042, 0.0014] };
+    var items = {
+      islandJN: { g: "gIsland", name: "도서·벽지학교 근무경력 (도서/벽지·급지 선택)", cap: 3.0, grades: Object.keys(islandR), periods: [{ r: islandR }] },
+      ruralJN: { g: "gRural", name: "농·어촌교육진흥학교 근무경력", cap: 1.0, grades: ["1급지", "2급지", "3급지"], periods: [
+        { from: "1995-01-01", to: "2013-02-28", label: "~2013.2.", r: { "1급지": [0.0119, 0.0004], "2급지": [0.0119, 0.0004], "3급지": [0.0119, 0.0004] } },
+        { from: "2013-03-01", to: "2026-02-28", label: "2013.3.~2026.2.", r: { "1급지": [0.012, 0.0004], "2급지": [0.008, 0.00027], "3급지": [0.006, 0.0002] } },
+        { from: "2026-03-01", baseTo: "2028-02-29", label: "2026.3.~", r: { "1급지": [0.012, 0.0004], "2급지": [0.008, 0.00027], "3급지": [0.006, 0.0002] } },
+        { from: "2026-03-01", baseFrom: "2028-03-01", label: "2026.3.~ (2028 평정부터)", r: { "1급지": [0.0125, 0.00042], "2급지": [0.0097, 0.00032], "3급지": [0.0074, 0.00025] } }] },
+      head: { g: "gHead", name: "보직교사 근무경력 (기본경력점)", cap: 1.0, periods: [{ m: 0.012, d: 0.0004 }] },
+      supervisor: { g: "gHead", name: "장학사·교육연구사 근무경력 (기본경력점)", cap: 1.0, periods: [{ m: 0.012, d: 0.0004 }] },
+      research2: { g: "gRes", name: "교육감·교육장 지정 연구학교 근무경력", cap: 1.25, grades: ["교육감(도) 지정", "교육장(시·군) 지정"], periods: [
+        { baseTo: OLD, r: { "교육감(도) 지정": [0.0167, 0.00056], "교육장(시·군) 지정": [0.0139, 0.00047] } },
+        { baseFrom: "2027-03-01", r: { "교육감(도) 지정": [0.0144, 0.00048], "교육장(시·군) 지정": [0.0120, 0.0004] } }] },
+      multiGrade: { g: "gEtc", name: "복식학급·겸임·순회교사, 병설(통합)운영학교 교감", cap: 0.5, periods: [{ from: "2002-03-01", m: 0.0105, d: 0.00035 }] },
+      cyber: { g: "gEtc", name: "사이버가정학습(e-학습터) 담당교사 (2009.1.1.~)", cap: 0.5, periods: [{ from: "2009-01-01", m: 0.0105, d: 0.00035 }] },
+      giftedJN: { g: "gEtc", name: "영재교육원·발명교실·영어(외국어체험)타운 전담교사", cap: 0.5, periods: [{ from: "2005-03-01", m: 0.0105, d: 0.00035 }] },
+      practiceJN: { g: "gEtc", name: "교육실습학생 담당교사 (준비·정리 1개월 더해 입력)", cap: 0.5, periods: [{ from: "2005-03-01", m: 0.0315, d: 0.00105 }] },
+      youthJN: { g: "gEtc", name: "청소년단체 담당교사", cap: 0.5, periods: [
+        { from: "2005-03-01", to: "2012-05-31", label: "~2012.5.", m: 0.0105, d: 0.00035 }, { from: "2012-06-01", label: "2012.6.~", m: 0.0053, d: 0.000177 }] },
+      researcherJN: { g: "gEtc", name: "현직연구원 경력 (2009.1.1.~)", cap: 0.5, periods: [{ from: "2009-01-01", m: 0.0105, d: 0.00035 }] },
+      hansenJN: { g: "gEtc", name: "한센병 환자자녀 관련 경력", cap: 0.5, periods: [{ to: ele ? "2008-12-31" : "2008-02-29", m: 0.0084, d: 0.00028 }] },
+      spedJN: { g: "gEtc", name: "특수학교·특수학급 근무경력", cap: 0.5, grades: ele ? ["특수학교", "특수학급", "통합교육학급"] : ["특수학교", "특수학급"],
+        periods: [{ to: ele ? "2008-02-29" : null, r: { "특수학교": [0.0084, 0.00028], "특수학급": [0.0042, 0.00014], "통합교육학급": [0.0021, 0.00007] } }] },
+      headExtra: { g: "gEtc", name: "보직교사·장학사 추가경력점 (기본 1.0 도달 이후)", cap: 0.25, periods: [{ from: ele ? null : "2016-03-01", m: 0.003, d: 0.0001 }] },
+      residence: { g: "gResid", name: "전라남도 거주 경력 (2012.6.1.~)", cap: 0.5, grades: ["본인 단독 거주", "전가족 거주"], periods: [
+        { from: "2012-06-01", baseTo: OLD, r: { "본인 단독 거주": [0.0016, 0.000053], "전가족 거주": [0.0025, 0.000083] } },
+        { from: "2012-06-01", baseFrom: "2027-03-01", r: { "본인 단독 거주": [0.0027, 0.00009], "전가족 거주": [0.0027, 0.00009] } }] }
+    };
+    if (ele) {
+      items.subjectTeacher = { g: "gEtc", name: "교과전담 교사 (2009.1.1.~2012.2.29.)", cap: 0.5, periods: [{ from: "2009-01-01", to: "2012-02-29", m: 0.0105, d: 0.00035 }] };
+    } else {
+      items.dormJN = { g: "gEtc", name: "기숙사 사감·공동실습소·마이스터 전문교과·JOBS·도제·인성중심특성화", cap: 0.5, periods: [{ from: "2005-03-01", m: 0.0105, d: 0.00035 }] };
+      items.homeroomJN = { g: "gEtc", name: "학급 담임 경력 (2012.6.1.~)", cap: 0.2, periods: [{ from: "2012-06-01", m: 0.002, d: 0.000067 }] };
+      items.hsHomeroom = { g: "gIsland", name: "일반고 담임 경력 (도서·벽지 대체, 2016.3.1.~2028.2.29.)", cap: 3.0, periods: [{ from: "2016-03-01", to: "2028-02-29", m: 0.0167, d: 0.000557 }] };
+    }
+    return {
+      ready: true, source: "전라남도교육청 「2026 승진후보자 평정업무 처리요령(" + (ele ? "유·초등" : "중등") + ")」, 가산점산정규정(훈령 제253호)",
+      notice: "도서·벽지·농어촌 학교와 급지는 처리요령의 ‘2025. 지정 일람’에서 확인해 고르세요. 좋은수업 실천연구(교내 0.06·권역 0.08), 학교교육력 증진 유공(연 0.036), " +
+        (ele ? "전국대회 입상 지도·학급경영 우수교사 등" : "도서·벽지 대체 입상 실적") + "은 ‘직접 입력 가산점’으로 넣으세요. 농어촌 추가경력점(월 0.002, 기본 0.85 도달 후), 기타 교육활동 1개 목 0.5점 상한 등은 단순화했습니다.",
+      commonCaps: { credits: 0.8 },
+      selectCap: 9.5,
+      certOptions: [["A", "1급 (기사·산업기사·정보처리·해기사 1~3급·서비스 1급, 2012년 이후 워드) 0.3"], ["B", "2급 (기능사·해기사 4급 이하·서비스 2급) 0.2"], ["C", "3급 (서비스 3급) 0.1"]],
+      groups: {
+        gIsland: { name: "도서·벽지학교 근무경력" + (ele ? "" : " (일반고 담임 대체 포함)"), cap: 3.0 },
+        gRural: { name: "농·어촌교육진흥학교 근무경력", cap: 1.0 },
+        gHead: { name: "보직교사·장학사·교육연구사 근무경력", cap: 1.0 },
+        gRes: { name: "교육감·교육장 지정 연구학교 (공통 연구학교와 합산)", cap: 1.25 },
+        gEtc: { name: "기타 교육활동 및 전문성 신장활동 경력·실적", cap: 1.0 },
+        gGood: { name: "좋은수업 실천연구 실적", cap: 1.5 },
+        gResid: { name: "전라남도 거주 경력", cap: 0.5 }
+      },
+      items: items,
+      pairs: ["islandJN|ruralJN", "islandJN|spedJN", "islandJN|hansenJN", "ruralJN|spedJN", "ruralJN|hansenJN",
+        "head|homeroomJN", "head|spedJN", "head|hansenJN", "research|research2", "islandJN|hsHomeroom"],
+      groupCap: function (g, base, res) {
+        if (g === "gRes") return Math.max(0, (base != null && base >= parse("2027-03-01") ? 1.0 : 1.25) - (res.items.research ? res.items.research.val : 0));
+        if (g === "gRural" && base != null && base >= parse("2028-03-01")) return 1.5;
+        return null;
+      },
+      itemCap: function (k, base) {
+        if (k === "ruralJN" && base != null && base >= parse("2028-03-01")) return 1.5;
+        if (k === "research2" && base != null && base >= parse("2027-03-01")) return 1.0;
+        return null;
+      },
+      counts: function (addCount, st) {
+        var v = { A: 0.3, B: 0.2, C: 0.1 }[st.cert] || 0;
+        addCount("cert", "gEtc", "국가기술자격법에 의한 자격증 (거목)", v, 0.3, st.cert ? st.cert + "등급" : "");
+      }
+    };
+  }
+  RULESETS["jeonnam:mid"] = jeonnamRules("mid");
+  RULESETS["jeonnam:ele"] = jeonnamRules("ele");
+
   // 시·도와 학교급. RULESETS에 없는 조합은 선택가산점 없이 경력·근평·연수·공통가산점만 계산
   var REGIONS = [["seoul", "서울"], ["busan", "부산"], ["daegu", "대구"], ["incheon", "인천"], ["gwangju", "광주"], ["daejeon", "대전"],
     ["ulsan", "울산"], ["sejong", "세종"], ["gyeonggi", "경기"], ["gangwon", "강원"], ["chungbuk", "충북"], ["chungnam", "충남"],
@@ -1182,6 +1260,9 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
     if (base != null) e = Math.min(e, base);
     var out = [];
     it.periods.forEach(function (per, i) {
+      // baseFrom/baseTo: 평정 기준일에 따라 적용하는 점수표 (예: 2027. 3. 1. 이후 평정부터 바뀌는 점수)
+      if (per.baseFrom && (base == null || base < parse(per.baseFrom))) return;
+      if (per.baseTo && base != null && base > parse(per.baseTo)) return;
       var c = clip(s, e, parse(per.from), parse(per.to));
       if (!c) return;
       var rate = per.r ? per.r[p.grade] : [per.m, per.d];
@@ -1235,7 +1316,7 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
     Object.keys(byYear).sort().forEach(function (y) {
       var v = Math.min(byYear[y] * 0.02, 0.08); cr += v; crLines.push(y + "학년도 " + byYear[y] + "학점 → " + f4(v));
     });
-    addCount("credits", "common", "직무연수 이수실적 (학점)", cr, 1.0, crLines.join(", "));
+    addCount("credits", "common", "직무연수 이수실적 (학점)", cr, (REG.commonCaps && REG.commonCaps.credits) || 1.0, crLines.join(", "));
     addCount("violence", "common", "학교폭력 예방·대응 실적", num(state.violence) * 0.1, 1.0, num(state.violence) ? num(state.violence) + "년 × 0.1" : "");
     if (REG.counts) REG.counts(addCount, state, base);
     // 직접 입력 가산점: 고른 그룹에 그대로 더함
