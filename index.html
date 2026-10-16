@@ -2133,6 +2133,14 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
       return null;
     }
   };
+  // 기준 미등록 조합별 안내
+  var MISSING_NOTE = {
+    "ulsan:ele": "울산은 「교육공무원 승진가산점 규정」의 [중등] 기준표만 공개되어 있고, 초등 기준표는 찾지 못했습니다(초등 인사관리기준의 [별표 1]은 전보 가산점입니다).",
+    "daegu:mid": "대구광역시교육청 자료를 아직 받지 못했습니다.",
+    "daegu:ele": "대구광역시교육청 자료를 아직 받지 못했습니다.",
+    "jeonbuk:mid": "전북은 개정 공고만 확보되어 있고, 점수표가 담긴 규정 전문을 찾지 못했습니다.",
+    "jeonbuk:ele": "전북은 개정 공고만 확보되어 있고, 점수표가 담긴 규정 전문을 찾지 못했습니다."
+  };
   // 전남·광주는 2026. 7. 1. 전남광주통합특별시교육청으로 통합. 가산점 규정이 하나로 정비되기 전까지 옛 관할구역별로 둔다.
   // 시·도와 학교급. RULESETS에 없는 조합은 선택가산점 없이 경력·근평·연수·공통가산점만 계산
   var REGIONS = [["seoul", "서울"], ["busan", "부산"], ["daegu", "대구"], ["incheon", "인천"], ["daejeon", "대전"],
@@ -2147,6 +2155,8 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
     REG = RULESETS[region + ":" + level] || { ready: false };
     GROUPS = { common: { name: "공통가산점", cap: null } };
     Object.keys(REG.groups || {}).forEach(function (g) { GROUPS[g] = REG.groups[g]; });
+    // 기준 미등록 시·도: 본인이 아는 선택가산점을 직접 입력해 더할 수 있게 빈 그룹 하나를 둔다
+    if (!REG.ready) GROUPS.gManual = { name: "선택가산점 (직접 입력)", cap: 10 };
     ITEMS = {};
     Object.keys(COMMON_ITEMS).forEach(function (k) { ITEMS[k] = COMMON_ITEMS[k]; });
     Object.keys(REG.items || {}).forEach(function (k) { ITEMS[k] = REG.items[k]; });
@@ -2644,7 +2654,9 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
     st.className = "reg-status" + (REG.ready && !REG.notice ? "" : " missing");
     st.textContent = REG.ready
       ? label + " 선택가산점 기준: " + REG.source + (REG.notice ? " · " + REG.notice : "")
-      : label + "의 선택가산점 기준은 아직 등록되지 않았습니다. 경력·근무성적·연수성적평정과 공통가산점(전국 공통)만 계산합니다. 해당 시·도교육청의 「가산점 부여기준(" + nameOf(LEVELS, state.level) + ")」 고시문이 있으면 추가할 수 있습니다.";
+      : label + "의 선택가산점 기준은 아직 등록되지 않았습니다. 경력·근무성적·연수성적평정과 공통가산점(전국 공통)만 계산합니다. " +
+        (MISSING_NOTE[state.region + ":" + state.level] || "해당 시·도교육청의 「가산점 부여기준(" + nameOf(LEVELS, state.level) + ")」 고시문이 있으면 추가할 수 있습니다.") +
+        " 본인 선택가산점을 알고 있다면 아래 ‘직접 입력 가산점’에 ‘선택가산점 (직접 입력)’으로 넣으면 총점에 더해집니다.";
     document.getElementById("eyebrow").textContent = "교육공무원 승진규정 · " + (REG.ready ? REG.source : label + " 선택가산점 기준 미등록");
     document.getElementById("pageTitle").textContent = label + " 승진 평정 계산기";
   }
