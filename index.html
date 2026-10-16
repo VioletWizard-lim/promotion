@@ -177,6 +177,22 @@ details summary small { font-weight: 400; }
 .file-btn input { position: absolute; width: 1px; height: 1px; opacity: 0; }
 .file-btn:focus-within { outline: 2px solid var(--accent); outline-offset: 1px; }
 .toast.err { color: var(--over); }
+.limits { min-width: 0; max-width: 100%; }
+.limits summary { font-weight: 500; }
+.limits[open] summary { margin-bottom: 10px; }
+.limits table { min-width: 460px; }
+th.nh { text-align: right; white-space: nowrap; }
+td .where { font-size: 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 8px; padding: 0 6px; white-space: nowrap; }
+td .basis { font-size: 12px; color: var(--muted); margin-top: 2px; }
+td.full { color: var(--ok); font-weight: 500; }
+tr.grp td small, tr.tot td small { font-weight: 400; color: var(--muted); }
+tr.tot td { border-top: 2px solid var(--line); }
+@media (max-width: 640px) {
+  .limits table { min-width: 0; font-size: 12px; }
+  .limits th, .limits td { padding: 6px 4px; }
+  .limits td.n { font-size: 11.5px; }
+  .limits .nh span { display: none; }
+}
 .guide { font-size: 13px; background: var(--accent-soft); border-radius: 4px; padding: 10px 12px; display: grid; gap: 6px; }
 .guide ul { margin: 0; padding-left: 18px; display: grid; gap: 2px; }
 .guide p { margin: 0; color: var(--muted); }
@@ -276,7 +292,7 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
       <section class="card step" id="s5" data-kind="score">
         <h2><span class="no">5</span>자격면허 <small>→ 선택가산점 (국가기술 자격증)</small><span class="sec-pts" data-pts="s5"></span></h2>
         <div class="grid-inputs">
-          <label for="cert">보유 자격증 최상위 등급
+          <label for="cert">보유 자격증 최상위 등급 · 최대 0.5
             <select id="cert" data-k="cert">
               <option value="">해당 없음</option>
               <option value="A">A등급 (기사·워드1급·컴활1급 등) 0.5</option>
@@ -341,7 +357,7 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
           <p class="note">같은 해 입상이 여러 개면 가장 높은 1개만 반영합니다.</p>
         </div>
         <div class="sub">
-          <h3>인천 수업연구 발표대회 입상 → 선택가산점 (교실수업개선, 2020. 2. 29.까지)</h3>
+          <h3>인천 수업연구 발표대회 입상 → 선택가산점 (교실수업개선, 2020. 2. 29.까지 · 최대 1.0)</h3>
           <div class="grid-inputs">
             <label for="award1">1등급 (회)
               <input type="number" id="award1" min="0" step="1" data-k="award1">
@@ -359,6 +375,11 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
 
       <section class="card step" id="s12" data-kind="score">
         <h2><span class="no">12</span>가산점 <small>→ 공통·선택가산점</small><span class="sec-pts" data-pts="s12"></span></h2>
+        <details class="limits" id="limitsBox" open>
+          <summary>가산점 영역별 최대 점수 <small class="hint">그룹 상한과 항목 상한 중 먼저 닿는 쪽까지만 인정됩니다</small></summary>
+          <div class="tbl-wrap"><table id="detail"></table></div>
+          <p class="note">‘더 받을 수 있음’은 항목 상한과 그룹 상한을 함께 고려한 값입니다. 5·7·11번에서 입력하는 가산점도 이 표에 함께 나옵니다. 지역근무 및 유공경력 그룹 상한은 2030. 3. 31.자 명부부터 3.0점입니다.</p>
+        </details>
         <div class="sub" style="border-top:0;padding-top:0">
           <h3>기간으로 매기는 가산점 (도서·벽지, 특수지역, 보직, 담임, 연구학교 등)</h3>
           <div class="school-find">
@@ -376,20 +397,20 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
         <div class="sub">
           <h3>건수로 매기는 가산점</h3>
           <div class="grid-inputs">
-            <label for="violence">학교폭력 예방·대응 실적 (연수) · 공통
+            <label for="violence">학교폭력 예방·대응 실적 (연수) · 공통, 최대 1.0
               <input type="number" id="violence" min="0" step="1" data-k="violence">
             </label>
-            <label for="prac26">교육실습 2주 이상 6주 미만 (회)
+            <label for="prac26">교육실습 2주 이상 6주 미만 (회) · 최대 1.0
               <input type="number" id="prac26" min="0" step="1" data-k="prac26">
             </label>
-            <label for="prac68">교육실습 6주 이상 8주 이하 (회)
+            <label for="prac68">교육실습 6주 이상 8주 이하 (회) · 최대 1.0
               <input type="number" id="prac68" min="0" step="1" data-k="prac68">
             </label>
-            <label for="youth">청소년봉사단 지도교사 (연수)
+            <label for="youth">청소년봉사단 지도교사 (연수) · 최대 0.5
               <input type="number" id="youth" min="0" step="1" data-k="youth">
             </label>
           </div>
-          <h3>실습학기제 교육실습 (월 0.01, 학기당 0.03 상한)</h3>
+          <h3>실습학기제 교육실습 (월 0.01, 학기당 0.03 상한 · 교육실습과 합쳐 최대 1.0)</h3>
           <div class="mini-rows" id="semesters"></div>
           <div class="row-actions"><button type="button" id="addSemester">학기 추가</button></div>
         </div>
@@ -456,10 +477,6 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
         <div class="kv" id="perfOut"></div>
       </section>
 
-      <section class="card">
-        <h2>가산점 항목별 상세</h2>
-        <div class="tbl-wrap"><table id="detail"></table></div>
-      </section>
 
       <section class="card">
         <details id="rulesBox">
@@ -943,7 +960,7 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
     Object.keys(GROUPS).forEach(function (g) {
       var opts = Object.keys(ITEMS).filter(function (k) { return ITEMS[k].g === g && !ITEMS[k].count; });
       if (!opts.length) return;
-      html += '<optgroup label="' + esc(GROUPS[g].name) + '">' + opts.map(function (k) { return '<option value="' + k + '">' + esc(ITEMS[k].name) + "</option>"; }).join("") + "</optgroup>";
+      html += '<optgroup label="' + esc(GROUPS[g].name) + '">' + opts.map(function (k) { return '<option value="' + k + '">' + esc(ITEMS[k].name) + " · 최대 " + ITEMS[k].cap.toFixed(2) + "</option>"; }).join("") + "</optgroup>";
     });
     return html;
   })();
@@ -1075,19 +1092,41 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
 
     document.getElementById("warns").innerHTML = res.warns.map(function (w) { return '<div class="warn">' + esc(w) + "</div>"; }).join("");
 
-    var th = "<thead><tr><th>항목</th><th>근거</th><th style=\"text-align:right\">계산</th><th style=\"text-align:right\">상한</th><th style=\"text-align:right\">인정</th></tr></thead><tbody>";
-    var any = false;
+    // 가산점 한도표: 그룹·항목별 최대 / 인정 / 더 받을 수 있는 점수
+    var WHERE = { credits: "7번", award: "11번", cert: "5번" };
+    function capOf(k) {
+      if (res.items[k]) return res.items[k].cap;
+      if (k === "research2") return Math.max(0, 1.0 - Math.min(res.items.research ? res.items.research.raw : 0, 1.0));
+      return ITEMS[k].cap;
+    }
+    function f2(x) { return (Math.round(x * 100) / 100).toFixed(2); }
+    var th = '<thead><tr><th>그룹 · 항목</th><th class="nh">인정</th><th class="nh">최대</th><th class="nh">더 받을<span> 수 있음</span></th></tr></thead><tbody>';
+    var commonMax = 0, selectMax = 0;
     Object.keys(GROUPS).forEach(function (g) {
       var gr = res.groups[g];
-      if (!gr.items.length) return;
-      any = true;
-      th += '<tr class="grp"><td colspan="2">' + esc(GROUPS[g].name) + '</td><td class="n">' + f4(gr.raw) + '</td><td class="n">' + (gr.cap == null ? "–" : gr.cap.toFixed(2)) + '</td><td class="n">' + f4(gr.val) + "</td></tr>";
-      gr.items.forEach(function (k) {
-        var r = res.items[k];
-        th += "<tr><td>" + esc(ITEMS[k].name) + "</td><td>" + esc(r.lines.join(" · ")) + '</td><td class="n">' + f4(r.raw) + '</td><td class="n">' + r.cap.toFixed(2) + '</td><td class="n' + (r.raw > r.val + 1e-9 ? " cut" : "") + '">' + f4(r.val) + "</td></tr>";
+      var keys = Object.keys(ITEMS).filter(function (k) {
+        // 폐지 항목은 입력한 경우에만 표시
+        return ITEMS[k].g === g && (!/\(폐지\)/.test(ITEMS[k].name) || res.items[k]);
+      });
+      if (!keys.length) return;
+      var gMax = gr.cap == null ? keys.reduce(function (a, k) { return a + capOf(k); }, 0) : gr.cap;
+      if (g === "common") commonMax = gMax; else selectMax += gMax;
+      var gLeft = Math.max(0, gMax - gr.val);
+      th += '<tr class="grp"><td>' + esc(GROUPS[g].name) + (gr.cap == null ? ' <small>(항목 상한 합계)</small>' : ' <small>(그룹 상한)</small>') + '</td><td class="n">' + f4(gr.val) + '</td><td class="n">' + f2(gMax) + '</td><td class="n' + (gLeft < 1e-9 ? " full" : "") + '">' + (gLeft < 1e-9 ? "상한 도달" : f4(gLeft)) + "</td></tr>";
+      keys.forEach(function (k) {
+        var r = res.items[k], cap = capOf(k), val = r ? r.val : 0;
+        var left = Math.max(0, Math.min(cap - val, gr.cap == null ? Infinity : gr.cap - gr.val));
+        var where = WHERE[k] || "12번";
+        var basis = r && r.lines.length ? r.lines.join(" · ") : "";
+        if (k === "research2" && cap < ITEMS[k].cap) basis = (basis ? basis + " · " : "") + "교육부 지정 연구학교(공통)와 합쳐 1.0점까지";
+        th += '<tr><td><span class="iname">' + esc(ITEMS[k].name) + '</span> <span class="where">' + where + "</span>" + (basis ? '<div class="basis">' + esc(basis) + "</div>" : "") +
+          '</td><td class="n' + (r && r.raw > r.val + 1e-9 ? " cut" : "") + '">' + (val ? f4(val) : "–") + '</td><td class="n">' + f2(cap) + '</td><td class="n' + (left < 1e-9 && val > 0 ? " full" : "") + '">' + (left < 1e-9 ? (val > 0 ? "상한 도달" : "0") : f4(left)) + "</td></tr>";
       });
     });
-    if (!any) th += '<tr><td colspan="5">아직 계산된 항목이 없습니다.</td></tr>';
+    var selCap = Math.min(10, selectMax);
+    th += '<tr class="tot"><td>공통가산점 최대</td><td class="n">' + f4(res.common) + '</td><td class="n">' + f2(commonMax) + '</td><td class="n">' + f4(Math.max(0, commonMax - res.common)) + "</td></tr>";
+    th += '<tr class="tot"><td>선택가산점 최대 <small>(그룹 상한 합계, 총합계 상한 10점)</small></td><td class="n">' + f4(res.select) + '</td><td class="n">' + f2(selCap) + '</td><td class="n">' + f4(Math.max(0, selCap - res.select)) + "</td></tr>";
+    th += '<tr class="tot"><td><b>가산점 전체 최대</b></td><td class="n"><b>' + f4(res.total) + '</b></td><td class="n"><b>' + f2(commonMax + selCap) + '</b></td><td class="n"><b>' + f4(Math.max(0, commonMax + selCap - res.total)) + "</b></td></tr>";
     th += "</tbody>";
     document.getElementById("detail").innerHTML = th;
 
