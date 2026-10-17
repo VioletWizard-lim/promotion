@@ -612,6 +612,7 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
   function legacy(name, from, to) { return { g: "g6", name: name, cap: 0.5, periods: [{ from: from, to: to, m: 0.005, d: 0.00017 }] }; }
   var RULESETS = {
     "incheon:mid": {
+      groupExclusive: true, halfMerit: true,
       ready: true, source: "인천광역시교육청 공고 제2026-319호 「가산점 부여기준(중등)」 (2026. 7. 24. 개정)",
       groups: {
         g1: { name: "지역근무 및 유공경력", cap: 2.75 },
@@ -686,6 +687,7 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
     },
     /* 인천 유치원·초등·특수: 공고 제2022-187호 (2022. 7. 14.) */
     "incheon:ele": {
+      groupExclusive: true, halfMerit: true,
       ready: true, source: "인천광역시교육청 공고 제2022-187호 「가산점 부여기준(유치원·초등·특수)」 (2022. 7. 14. 개정)",
       notice: "2022. 7. 14. 고시 기준입니다. 이후 개정이 있었다면 반영되지 않았을 수 있습니다.",
       groups: {
@@ -1603,7 +1605,7 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
       groups.gHomeroom = { name: "중등학교 담임교사 근무경력", cap: 1.5 };
     }
     return {
-      ready: true, source: "「제주특별자치도교육감 소속 교육공무원 승진가산점 평정규정」 (2026. 8. 19. 개정)",
+      groupExclusive: true, ready: true, source: "「제주특별자치도교육감 소속 교육공무원 승진가산점 평정규정」 (2026. 8. 19. 개정)",
       notice: "도서·벽지는 근무 시기에 맞는 구역(1985년 이전 갑·을·병, 1986~1997 가~라, 1998년 이후 A~E, 타 시·도는 급지)을 골라 행을 나눠 입력하세요. 1997. 12. 31. 이전 타 시·도 도서·벽지 경력, 사이버학습 학급 운영 유공교사(2011.6.1.~2016.2.29.), 세 자녀 이상 가산점(세 자녀 0.002·네 자녀 0.004·다섯 자녀 이상 0.006)은 ‘직접 입력 가산점’으로 넣으세요. 교육실습 협력학교는 학년도당 6개월만, 도서지역 구분 선발 교사는 의무근무(8년) 만료 시 최대 2년만 입력하세요. 2013. 2. 28. 이전 취득분 경과 상한(보직 1.75, 도서·벽지 3.00, 특수 1.25, 도서·벽지·특수 합산 3.50)은 반영하지 않았습니다. 보직교사는 " +
         (ele ? "유·초등 2027. 2. 28." : "중등 2024. 2. 29.") + "까지 취득분을 2.00점까지만 인정합니다.",
       selectCap: 10,
@@ -2407,21 +2409,128 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
   }
   function segPts(sp, rm, rd) { return sp.m * rm + sp.d * rd; }
 
+  /* ---------- 같은 기간 중복 경력 정리 ----------
+     같은 항목끼리, 또는 택일 대상(시·도 중복 금지 쌍·같은 영역 택일)끼리 기간이 겹치면
+     겹친 기간은 월 점수가 높은 경력 하나만 평정하고 나머지에서는 뺀다.
+     인천: 2015.3.1.~2017.2.28. 도서·벽지/농어촌과 학교교육 유공경력이 겹치면 유공경력을 50%로 함께 인정. */
+  var HALF_FROM = "2015-03-01", HALF_TO = "2017-02-28";
+  function resolveOverlaps(base) {
+    var all = [];
+    state.periods.forEach(function (p, order) {
+      segments(p, base).forEach(function (g) { all.push({ p: p, g: g, order: order, pieces: [{ s: g.s, e: g.e, half: false }] }); });
+    });
+    function conflict(a, b) {
+      if (a.p.item === b.p.item) return "same";
+      if (PAIRSET[a.p.item + "|" + b.p.item]) return "pair";
+      var A = ITEMS[a.p.item], B = ITEMS[b.p.item];
+      if (REG.groupExclusive && A && B && A.g === B.g && A.g !== "common") return "group";
+      return null;
+    }
+    function halfPair(a, b) {
+      var k = [a.p.item, b.p.item].sort().join("|");
+      return REG.halfMerit && (k === "island|merit" || k === "merit|rural");
+    }
+    function subtract(pieces, s, e) {
+      var out = [];
+      pieces.forEach(function (x) {
+        if (e < x.s || s > x.e) { out.push(x); return; }
+        if (x.s < s) out.push({ s: x.s, e: s - DAY, half: x.half });
+        if (x.e > e) out.push({ s: e + DAY, e: x.e, half: x.half });
+      });
+      return out;
+    }
+    function halve(pieces, s, e) {
+      var out = [];
+      pieces.forEach(function (x) {
+        var a = Math.max(x.s, s), b = Math.min(x.e, e);
+        if (b < a || x.half) { out.push(x); return; }
+        if (x.s < a) out.push({ s: x.s, e: a - DAY, half: false });
+        out.push({ s: a, e: b, half: true });
+        if (x.e > b) out.push({ s: b + DAY, e: x.e, half: false });
+      });
+      return out;
+    }
+    // 월 점수가 높은 경력부터 차례로 기간을 차지한다 (같으면 먼저 입력한 행)
+    all.sort(function (x, y) { return (y.g.rm - x.g.rm) || (x.order - y.order) || (x.g.s - y.g.s); });
+    var kept = [], cut = {}, lost = {}, soft = {};
+    var hf = parse(HALF_FROM), ht = parse(HALF_TO);
+    all.forEach(function (x) {
+      kept.forEach(function (y) {
+        var kind = conflict(x, y);
+        if (!kind) {
+          var A = ITEMS[x.p.item], B = ITEMS[y.p.item];
+          if (A && B && A.g === B.g && A.g !== "common" && x.g.s <= y.g.e && y.g.s <= x.g.e)
+            soft[[x.p.item, y.p.item].sort().join("|")] = "‘" + A.name + "’과 ‘" + B.name + "’ 기간이 겹칩니다. 이 시·도 기준에서 같은 기간을 함께 인정하지 않는다면 한쪽 날짜를 조정하세요.";
+          return;
+        }
+        y.pieces.forEach(function (yp) {
+          var s = Math.max(yp.s, x.g.s), e = Math.min(yp.e, x.g.e);
+          if (e < s) return;
+          if (halfPair(x, y)) {
+            // 유공경력 50% 중복 인정 구간은 둘 다 남기고, 유공경력 쪽을 절반으로
+            var hs = Math.max(s, hf), he = Math.min(e, ht);
+            if (he >= hs) {
+              if (x.p.item === "merit") x.pieces = halve(x.pieces, hs, he);
+              else y.pieces = halve(y.pieces, hs, he);
+              if (s < hs) x.pieces = subtract(x.pieces, s, hs - DAY);
+              if (e > he) x.pieces = subtract(x.pieces, he + DAY, e);
+              return;
+            }
+          }
+          var gone = { m: 0, d: 0 };
+          x.pieces.forEach(function (xp) {
+            var a = Math.max(xp.s, s), b = Math.min(xp.e, e);
+            if (b >= a) { var sp = span(a, b); gone.m += sp.m; gone.d += sp.d; }
+          });
+          if (!gone.m && !gone.d) return;
+          x.pieces = subtract(x.pieces, s, e);
+          var key = x.p.item + "|" + y.p.item + "|" + kind;
+          if (!lost[key]) lost[key] = { lose: x.p.item, win: y.p.item, kind: kind, m: 0, d: 0 };
+          lost[key].m += gone.m; lost[key].d += gone.d;
+          cut[x.p.id] = true;
+        });
+      });
+      kept.push(x);
+    });
+    var segs = {};
+    kept.forEach(function (x) {
+      x.pieces.forEach(function (pc) {
+        var sp = span(pc.s, pc.e);
+        if (!sp.m && !sp.d) return;
+        var f = pc.half ? 0.5 : 1;
+        (segs[x.p.id] = segs[x.p.id] || []).push({ idx: x.g.idx, s: pc.s, e: pc.e, sp: sp, rm: x.g.rm * f, rd: x.g.rd * f, half: pc.half });
+      });
+    });
+    Object.keys(segs).forEach(function (id) { segs[id].sort(function (a, b) { return a.s - b.s; }); });
+    var notes = Object.keys(lost).map(function (k) {
+      var L = lost[k], A = ITEMS[L.lose], B = ITEMS[L.win];
+      var len = fmtSpan({ m: L.m + Math.floor(L.d / 30), d: L.d % 30 });
+      if (L.kind === "same") return "‘" + A.name + "’ 기간이 서로 겹쳐, 겹친 " + len + "은 한 번만 계산했습니다.";
+      return "‘" + A.name + "’과 ‘" + B.name + "’ 기간이 " + len + " 겹칩니다. 같은 기간은 하나만 평정하므로, 겹친 기간은 월 점수가 높은 ‘" + B.name + "’으로 계산하고 ‘" + A.name + "’에서는 뺐습니다.";
+    });
+    Object.keys(soft).forEach(function (k) { notes.push(soft[k]); });
+    if (REG.halfMerit && all.some(function (x) { return x.pieces.some(function (pc) { return pc.half; }); }))
+      notes.push("2015.3.1.~2017.2.28.에 겹친 학교교육 유공경력은 50%만 함께 인정했습니다.");
+    return { segs: segs, cut: cut, notes: notes };
+  }
+
   function compute() {
     var base = parse(state.baseDate);
     var res = { items: {}, rows: {}, warns: [] };
     // 경력 기간 집계: 항목 > 평정구간 > 구역 별로 개월·일 합산
     var agg = {};
+    var resolved = resolveOverlaps(base);
     state.periods.forEach(function (p) {
-      var segs = segments(p, base), pts = 0, tot = { m: 0, d: 0 };
+      var segs = resolved.segs[p.id] || [], pts = 0, tot = { m: 0, d: 0 };
       segs.forEach(function (g) {
         pts += segPts(g.sp, g.rm, g.rd); tot.m += g.sp.m; tot.d += g.sp.d;
-        var k = p.item + "|" + g.idx + "|" + (p.grade || "");
-        if (!agg[k]) agg[k] = { item: p.item, idx: g.idx, grade: p.grade || "", m: 0, d: 0, rm: g.rm, rd: g.rd };
+        var k = p.item + "|" + g.idx + "|" + (p.grade || "") + (g.half ? "|h" : "");
+        if (!agg[k]) agg[k] = { item: p.item, idx: g.idx, grade: p.grade || "", half: !!g.half, m: 0, d: 0, rm: g.rm, rd: g.rd };
         agg[k].m += g.sp.m; agg[k].d += g.sp.d;
       });
-      res.rows[p.id] = { segs: segs, pts: pts, tot: tot };
+      res.rows[p.id] = { segs: segs, pts: pts, tot: tot, cut: resolved.cut[p.id] || null };
     });
+    resolved.notes.forEach(function (n) { res.warns.push(n); });
     var itemRaw = {}, itemSub = {};
     Object.keys(agg).forEach(function (k) {
       var a = agg[k];
@@ -2431,7 +2540,7 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
       itemSub[sk] = (itemSub[sk] || 0) + pts;
       if (!res.items[a.item]) res.items[a.item] = { raw: 0, lines: [] };
       var per = ITEMS[a.item].periods[a.idx];
-      res.items[a.item].lines.push((a.grade ? gradeLabel(a.grade) + " " : "") + (per.label ? "[" + per.label + "] " : "") + fmtSpan({ m: a.m, d: a.d }));
+      res.items[a.item].lines.push((a.grade ? gradeLabel(a.grade) + " " : "") + (per.label ? "[" + per.label + "] " : "") + (a.half ? "[중복 50%] " : "") + fmtSpan({ m: a.m, d: a.d }));
     });
     Object.keys(itemSub).forEach(function (sk) {
       var parts = sk.split("|"), it = ITEMS[parts[0]], per = it.periods[+parts[1]];
@@ -2493,23 +2602,6 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
     res.select = Math.min(sel, res.selectCap);
     res.total = res.common + res.select;
 
-    // 중복 경력 검사
-    var ps = state.periods.filter(function (p) { return res.rows[p.id] && res.rows[p.id].segs.length; });
-    for (var i = 0; i < ps.length; i++) for (var j = i + 1; j < ps.length; j++) {
-      var a = ps[i], b = ps[j], ra = res.rows[a.id], rb = res.rows[b.id];
-      var as = Math.min.apply(null, ra.segs.map(function (x) { return x.s; })), ae = Math.max.apply(null, ra.segs.map(function (x) { return x.e; }));
-      var bs = Math.min.apply(null, rb.segs.map(function (x) { return x.s; })), be = Math.max.apply(null, rb.segs.map(function (x) { return x.e; }));
-      if (Math.max(as, bs) > Math.min(ae, be)) continue;
-      var A = ITEMS[a.item], B = ITEMS[b.item], msg = null;
-      var label = "‘" + A.name + "’과 ‘" + B.name + "’";
-      if (a.item === b.item) msg = "‘" + A.name + "’ 기간이 서로 겹칩니다. 같은 기간은 한 번만 평정하므로 날짜를 확인하세요.";
-      else if (A.g === B.g && A.g !== "common") {
-        var pair = [a.item, b.item].sort().join("|");
-        if (pair === "island|merit" || pair === "merit|rural") msg = label + " 기간이 겹칩니다. 2015.3.1.~2017.2.28.만 유공경력 50% 중복 인정, 그 밖에는 유리한 하나만 평정합니다.";
-        else msg = label + " 기간이 겹칩니다. 같은 그룹 안에서는 유리한 경력 하나만 평정합니다.";
-      } else if (PAIRSET[a.item + "|" + b.item]) msg = label + " 기간이 겹칩니다. 중복 경력 처리 기준상 택일 대상입니다.";
-      if (msg) res.warns.push(msg);
-    }
     if (res.items.research && res.items.research2 && res.items.research2.val < res.items.research2.raw && res.items.research2.cap < ITEMS.research2.cap)
       res.warns.push("교육부·교육감 지정 연구학교 경력은 합산 " + ITEMS.research2.cap + "점을 넘을 수 없어 교육감지정 쪽을 줄였습니다.");
     if (sel > res.selectCap) res.warns.push("선택가산점 총합계 " + res.selectCap + "점 상한을 넘어 잘렸습니다.");
