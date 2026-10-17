@@ -2727,9 +2727,12 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
   var regionSel = document.getElementById("region"), levelSel = document.getElementById("level");
   // 선택가산점 기준이 아직 없는 곳을 처음부터 알려 준다
   (function () {
+    var WHY = { "daegu:mid": "교육청 사이트 점검 중", "daegu:ele": "교육청 사이트 점검 중", "ulsan:ele": "초등 기준표 검색 안 됨" };
     var miss = REGIONS.map(function (r) {
-      var ls = LEVELS.filter(function (l) { return !RULESETS[r[0] + ":" + l[0]]; }).map(function (l) { return l[1]; });
-      return ls.length ? r[1] + " " + ls.join("·") : "";
+      var ls = LEVELS.filter(function (l) { return !RULESETS[r[0] + ":" + l[0]]; });
+      if (!ls.length) return "";
+      var why = ls.map(function (l) { return WHY[r[0] + ":" + l[0]]; }).filter(function (w, i, a) { return w && a.indexOf(w) === i; });
+      return r[1] + " " + ls.map(function (l) { return l[1]; }).join("·") + (why.length ? " (" + why.join(", ") + ")" : "");
     }).filter(Boolean);
     document.getElementById("coverage").innerHTML = miss.length
       ? "<strong>선택가산점 기준이 아직 없는 곳: " + esc(miss.join(", ")) + "</strong><br>이곳은 경력·근무성적·연수성적·공통가산점만 계산되며, 본인이 아는 선택가산점은 ‘직접 입력 가산점’으로 더할 수 있습니다. 나머지 시·도는 선택가산점까지 계산됩니다."
