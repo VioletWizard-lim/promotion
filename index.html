@@ -349,7 +349,7 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
           <h3>직무연수 성적 (평정기준일 전 10년 이내, 60시간 이상)</h3>
           <div class="mini-rows" id="jobs"></div>
           <div class="row-actions"><button type="button" id="addJob">직무연수 추가</button></div>
-          <p class="note">성적이 가장 좋은 1개는 성적으로, 나머지 중 2개까지는 이수실적으로 반영합니다. 성적 없이 ‘이수’로만 기록된 연수는 성적 칸을 비워 두세요.</p>
+          <p class="note"><b>한 과정이 60시간 이상</b>인 직무연수만 넣습니다(15시간짜리 4개를 합친 것은 안 됨). 성적이 가장 좋은 1개는 성적으로, 나머지 중 2개까지는 이수실적으로 반영하므로 3개까지만 넣으면 됩니다. 성적 없이 ‘이수’로만 기록된 연수는 성적 칸을 비워 두세요.</p>
         </div>
         <div class="sub">
           <h3>자격연수 성적 (1급 정교사 자격연수 등)</h3>
@@ -366,7 +366,7 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
           <h3>직무연수 학점 → 공통가산점 (학점당 0.02, 학년도별 0.08, 총 1.0)</h3>
           <div class="mini-rows" id="credits"></div>
           <div class="row-actions"><button type="button" id="addCredit">학년도 추가</button></div>
-          <p class="note">학점으로 기록된 직무연수의 학년도별 합계를 입력하세요.</p>
+          <p class="note">시간과 관계없이 학점으로 기록된 직무연수를 <b>학년도별로 합쳐</b> 입력하세요(15시간 = 1학점). 단, 위 ‘직무연수 성적’에 넣은 연수의 학점은 빼고 입력합니다(중복 반영 안 됨).</p>
         </div>
       </section>
 
