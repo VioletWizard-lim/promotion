@@ -305,7 +305,7 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
 
       <section class="card step" id="s5" data-kind="score">
         <h2><span class="no">5</span>자격면허 <small>→ 선택가산점 (국가기술 자격증)</small><span class="sec-pts" data-pts="s5"></span></h2>
-        <div class="grid-inputs" data-only="incheon:mid incheon:ele busan:mid busan:ele chungbuk:mid chungbuk:ele gyeongnam:mid gyeongnam:ele jeonnam:mid jeonnam:ele gangwon:mid gangwon:ele chungnam:mid chungnam:ele ulsan:mid daejeon:mid daejeon:ele">
+        <div class="grid-inputs" data-only="incheon:mid incheon:ele busan:mid busan:ele chungbuk:mid chungbuk:ele gyeongnam:mid gyeongnam:ele jeonbuk:mid jeonbuk:ele jeonnam:mid jeonnam:ele gangwon:mid gangwon:ele chungnam:mid chungnam:ele ulsan:mid daejeon:mid daejeon:ele">
           <label for="cert">보유 자격증 최상위 등급 · 최대 0.5
             <select id="cert" data-k="cert">
               <option value="">해당 없음</option>
@@ -2134,13 +2134,113 @@ footer { font-size: 12px; color: var(--muted); max-width: 80ch; }
       return null;
     }
   };
+  /* 전북: 전라북도교육청 「교육공무원 승진가산점 평정 기준」 — 공고 제2015-1호 전문(2015. 1. 5.)에 제2015-179호·제2016-346호·제2017-195호·제2023-244호·제2023-376호 개정 반영. 중등·초등 공통 문서 */
+  function jeonbukRules(level) {
+    var ele = level === "ele";
+    var NEW_RES = "2023-02-28";  // 2017 개정(2022. 4. 1. 시행): 2022. 3. 31. 기준 명부 조정까지는 종전 → 2023. 3. 31. 명부(2023. 2. 28. 기준)부터 연구학교 점수·상한 인하
+    var sizeR = ele
+      ? { "20학급 이하": [0.009, 0.0003], "21~30학급": [0.010, 0.00033], "31~42학급": [0.011, 0.00036], "43학급 이상": [0.012, 0.0004] }
+      : { "14학급 이하": [0.005, 0.00016], "15~19학급": [0.007, 0.00023], "20~24학급": [0.008, 0.00026], "25~29학급": [0.009, 0.0003], "30학급 이상": [0.010, 0.00033] };
+    var ruralR = { "읍·면 지역 학교·농어촌 교육지원청": [0.015, 0.0005], "6개시 동지역 농어촌 지정학교": [0.013, 0.00043] };
+    var items = {
+      /* 제5조 제1호: 보직교사·장학사 */
+      head: { g: "gHead", name: "보직교사 근무경력 (1급 정교사·전문상담교사)", cap: 1.5, periods: [{ m: 0.018, d: 0.0006 }] },
+      supervisor: { g: "gHead", name: "장학사·교육연구사 근무경력", cap: 1.0, periods: [{ m: 0.021, d: 0.0007 }] },
+      /* 제5조 제2호 가목: 도서·벽지 */
+      islandJB: { g: "gArea", name: "도서·벽지 교육(행정)기관 근무경력", cap: ele ? 2.7 : 2.0, grades: ["가", "나", "다", "라"],
+        periods: [{ r: { "가": [0.053, 0.00176], "나": [0.045, 0.0015], "다": [0.036, 0.0012], "라": [0.023, 0.00076] } }] },
+      /* 제5조 제2호 나목: 농어촌 (초등 상한 2014.2.까지 2.30 → 2.50, 2026. 3. 1.부터 유·초 1.25) */
+      ruralJB: { g: "gArea", name: "농어촌 지정학교·농어촌 교육지원청 근무경력", cap: ele ? 2.5 : 1.08, grades: Object.keys(ruralR),
+        periods: ele ? [
+          { to: "2014-02-28", sub: 2.3, label: "~2014.2.28. (2.30 상한)", r: ruralR },
+          { from: "2014-03-01", to: "2026-02-28", label: "2014.3.1.~2026.2.28.", r: ruralR },
+          { from: "2026-03-01", sub: 1.25, label: "2026.3.1.~ (1.25 상한)", r: ruralR }]
+          : [{ r: ruralR }] },
+      /* 제5조 제2호 다목: 학교규모별 공립학교 (2023 개정, 2024. 3. 1. 시행) */
+      sizeJB: { g: "gArea", name: "도서·벽지·농어촌 이외 공립학교 근무경력 (학교규모별, 2024.3.1. 평정부터)", cap: ele ? 2.0 : 1.2,
+        grades: Object.keys(sizeR), periods: [{ baseFrom: "2024-03-01", r: sizeR }] },
+      /* 제5조 제3호: 한센병·특수 (폐지, 과거 경력 인정) */
+      hansenJB: { g: "gSped", name: "한센병환자 자녀 학교·학급 담당 (2011.12.31.까지)", cap: ele ? 0.7 : 1.0, periods: [{ to: "2011-12-31", m: 0.021, d: 0.0007 }] },
+      spedJB: { g: "gSped", name: "특수학교 근무·특수학급 직접 담당 (2008.12.31.까지)", cap: ele ? 0.7 : 1.0, grades: ["특수학교", "특수학급"],
+        periods: [{ to: "2008-12-31", r: { "특수학교": [0.021, 0.0007], "특수학급": [0.0105, 0.00035] } }] },
+      /* 제5조 제4호: 교육감 지정 연구학교 (공통 연구학교와 합산) */
+      research2: { g: "gRes", name: "교육감 지정 연구·시범·실험학교 근무경력", cap: 1.0, periods: [
+        { baseTo: "2023-02-27", label: "2023.2. 이전 평정", m: 0.01, d: 0.00033 },
+        { baseFrom: NEW_RES, label: "2023.3.31. 명부부터", m: 0.008, d: 0.00026 }] },
+      /* 제5조 제6호: 교육실습협력학교·청소년단체 */
+      practiceJB: { g: "gPract", name: "교육실습협력학교 유공교원 (2004.1.1.~)", cap: 0.2, periods: [{ from: "2004-01-01", m: 0.01, d: 0.00033 }] },
+      youthJB: { g: "gPract", name: "청소년단체 지도 (3년차부터, 2017.12.31.까지 평정)", cap: 0.2,
+        periods: [{ baseTo: "2017-12-31", m: 0.025 / 12, d: 0 }] }
+    };
+    var groups = {
+      gHead: { name: "보직교사·장학사·교육연구사 근무경력", cap: ele ? 2.5 : 2.0 },
+      gArea: { name: "도서·벽지·농어촌·학교규모별 근무경력" + (ele ? "" : " (중등 담임교사 경력과 합산 3.00)"), cap: 3.0 },
+      gSped: { name: "한센병환자 자녀 학교·특수학교(급) 근무경력", cap: ele ? 0.7 : 1.0 },
+      gRes: { name: "교육감 지정 연구학교 (공통 연구학교와 합산)", cap: 1.0 },
+      gCert: { name: "국가기술자격증", cap: 0.3 },
+      gPract: { name: "교육실습협력학교 유공·청소년단체 지도", cap: 0.2 }
+    };
+    var pairs = ["research|research2", "head|hansenJB", "supervisor|islandJB", "islandJB|hansenJB", "islandJB|spedJB",
+      "hansenJB|spedJB", "ruralJB|hansenJB", "ruralJB|spedJB"];
+    if (ele) {
+      /* 제5조 제7호 나목: 초등 담임교사 (2024. 3. 1. 경력부터) */
+      items.homeroomEleJB = { g: "gHomeroom", name: "초등학교 담임교사 근무경력 (2024.3.1.~)", cap: 0.24, periods: [{ from: "2024-03-01", m: 0.002, d: 0.00006 }] };
+      groups.gHomeroom = { name: "초등학교 담임교사 근무경력", cap: 0.24 };
+      groups.gEnglish = { name: "영어능력 (TEPS·TOEIC·TOEFL, 2026.2.28. 평정까지, 직접 입력)", cap: 0.25 };
+      groups.gSport = { name: "체육지도 유공교원 (전국(소년)체전 입상 지도, 직접 입력)", cap: 0.4 };
+    } else {
+      /* 제5조 제7호 (가목): 중·고 담임교사 — 2014. 3. 1.부터 월 0.018, 그 전은 종전(월 0.005, 1.08) */
+      items.homeroomJB = { g: "gHomeroom", name: "도내 중·고등학교 담임교사 근무경력 (국립은 2015.3.1.~)", cap: 2.0, periods: [
+        { to: "2014-02-28", sub: 1.08, label: "~2014.2.28. (1.08 상한)", m: 0.005, d: 0.00016 },
+        { from: "2014-03-01", label: "2014.3.1.~", m: 0.018, d: 0.0006 }] };
+      groups.gHomeroom = { name: "중·고등학교 담임교사 근무경력 (도서·벽지·농어촌과 합산 3.00)", cap: 2.0 };
+      /* 제5조 제10호: 마이스터고 (2013. 3. 1. 경력부터) */
+      items.meisterJB = { g: "gMeister", name: "마이스터고 근무경력 (2013.3.1.~)", cap: 0.036, periods: [{ from: "2013-03-01", m: 0.0005, d: 0.000016 }] };
+      groups.gMeister = { name: "마이스터고 근무경력", cap: 0.036 };
+      /* 제5조 제11호: 신설·전환학교 (2024. 3. 1. 경력부터, 개교·전환 후 3년) */
+      items.newSchoolJB = { g: "gNew", name: "신설·전환학교(일반고↔특성화고) 근무경력 (2024.3.1.~, 개교·전환 후 3년간만 입력)", cap: 0.108,
+        periods: [{ from: "2024-03-01", m: 0.003, d: 0.0001 }] };
+      groups.gNew = { name: "신설·전환학교 근무경력", cap: 0.108 };
+      /* 제6조 제10~12호 (중등) */
+      pairs = pairs.concat(["homeroomJB|head", "homeroomJB|spedJB", "homeroomJB|hansenJB", "homeroomJB|islandJB", "homeroomJB|ruralJB", "homeroomJB|research"]);
+    }
+    return {
+      ready: true,
+      source: "전라북도교육청 「교육공무원 승진가산점 평정 기준」 (공고 제2015-1호 전문, 제2015-179호·제2016-346호·제2017-195호·제2023-244호·제2023-376호 개정 반영)",
+      notice: "2015. 1. 5. 전문(공고 제2015-1호)에 2015·2016·2017·2023년 개정 공고를 차례로 반영해 재구성한 기준입니다. 2023. 8. 이후 개정이 있었다면 반영되지 않았습니다. " +
+        (ele
+          ? "영어능력(TEPS·TOEIC·TOEFL 0.25/0.20/0.15)은 2026. 2. 28.까지의 평정에만 인정됩니다. 체육지도 유공교원(전국(소년)체전 입상 지도 1위 0.144·2위 0.120·3위 0.100, 연중 1회, 상한 0.40)과 함께 ‘직접 입력 가산점’으로 넣으세요. 농어촌 상한은 2014. 2.까지 경력 2.30·전체 2.50, 2026. 3. 1. 이후 경력 1.25로 구간별로만 근사했습니다. 초등 교사의 농어촌 교육지원청 근무는 2014. 9. 1. 이후 경력만 입력하세요. 보직교사는 학교폭력 기여교원 가산점(공통)과 합산 2.00 상한이지만 이 합산은 반영하지 않았습니다. "
+          : "담임교사 경력은 도서·벽지·농어촌·학교규모별 경력과 합산 3.00으로 계산합니다. 2014. 2. 28.까지의 담임 경력은 종전 기준(월 0.005, 1.08)을 적용했습니다. 국립 중·고 담임은 2015. 3. 1. 이후 경력만, 신설·전환학교는 개교·전환 후 3년 안의 기간만 입력하세요. 타 시·도에서 받은 도서·벽지 가산점은 2016. 2. 29.까지 취득분만 인정됩니다. 보직·장학사 영역 2.00에 학교폭력 기여교원 가산점(공통)을 통합하는 규정은 반영하지 않았습니다. ") +
+        "청소년단체 지도(3년차부터 연 0.025)는 2017. 12. 31.까지의 평정에만 넣었습니다. 교육감 지정 연구학교는 2023. 3. 31. 명부부터 월 0.008(공통 연구학교와 합산 1.00), 그 전에는 월 0.01(합산 1.25)입니다. 학교규모별 가산점은 2024. 3. 1. 이후 평정에만 넣었습니다. 1997년 이전 도서·벽지 급지별 경과 점수와 유치원 기준은 반영하지 않았습니다.",
+      selectCap: 10,
+      certOptions: [["A", "1급 (국가기술자격 기술·기능·서비스 분야) 0.3"], ["B", "2급 0.2"], ["C", "3급 0.1"]],
+      groups: groups,
+      items: items,
+      schools: [],
+      pairs: pairs,
+      itemCap: function (k, base) {
+        if (k === "research2" && base != null && base < parse(NEW_RES)) return 1.25;
+        return null;
+      },
+      groupCap: function (g, base, res) {
+        if (g === "gRes" && base != null && base < parse(NEW_RES)) return 1.25;
+        /* 중등: 도서·벽지·농어촌·학교규모별 + 담임교사 합산 3.00 */
+        if (g === "gArea" && !ele) return Math.max(0, 3.0 - (res.items.homeroomJB ? res.items.homeroomJB.val : 0));
+        return null;
+      },
+      counts: function (addCount, st) {
+        var v = { A: 0.3, B: 0.2, C: 0.1 }[st.cert] || 0;
+        addCount("cert", "gCert", "국가기술자격증 (유리한 1개)", v, 0.3, st.cert ? st.cert + "등급" : "");
+      }
+    };
+  }
+  RULESETS["jeonbuk:mid"] = jeonbukRules("mid");
+  RULESETS["jeonbuk:ele"] = jeonbukRules("ele");
   // 기준 미등록 조합별 안내
   var MISSING_NOTE = {
     "ulsan:ele": "울산은 「교육공무원 승진가산점 규정」의 [중등] 기준표만 공개되어 있고, 초등 기준표는 찾지 못했습니다(초등 인사관리기준의 [별표 1]은 전보 가산점입니다).",
     "daegu:mid": "대구광역시교육청 자료를 아직 받지 못했습니다.",
-    "daegu:ele": "대구광역시교육청 자료를 아직 받지 못했습니다.",
-    "jeonbuk:mid": "전북은 개정 공고만 확보되어 있고, 점수표가 담긴 규정 전문을 찾지 못했습니다.",
-    "jeonbuk:ele": "전북은 개정 공고만 확보되어 있고, 점수표가 담긴 규정 전문을 찾지 못했습니다."
+    "daegu:ele": "대구광역시교육청 자료를 아직 받지 못했습니다."
   };
   // 전남·광주는 2026. 7. 1. 전남광주통합특별시교육청으로 통합. 가산점 규정이 하나로 정비되기 전까지 옛 관할구역별로 둔다.
   // 시·도와 학교급. RULESETS에 없는 조합은 선택가산점 없이 경력·근평·연수·공통가산점만 계산
